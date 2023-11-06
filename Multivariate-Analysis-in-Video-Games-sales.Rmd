@@ -51,11 +51,15 @@ The dataset contains the following fields:
 * **Global_Sales** - Total worldwide sales (per Million)
 
 ## Data Preprocessing
-The dataset contains 11 variables, including quantitative variables like sales figures across various regions (NA_Sales, EU_Sales, JP_Sales, Other_Sales, and Global_Sales), the release year, and the rank of the game based on overall sales. Additionally, it includes multi-state categorical variables like the genre, platform, and publisher of the game. To conform with the desired format, which requires at least two binary variables, we will filter out the video games of recent years and focus on titles that we are already acquainted with. Moreover, we will limit our research to two primary platforms, namely, PC and PS4.
+The dataset contains 11 variables, including quantitative variables like sales figures across various regions (NA_Sales, EU_Sales, JP_Sales, Other_Sales, and Global_Sales), the release year, and the rank of the game based on overall sales. Additionally, it includes multi-state categorical variables like the genre, platform, and publisher of the game. To conform with the desired format, which requires at least two binary variables, we will filter out the video games of recent years and focus on titles that we are already acquainted with. Moreover, we will limit our research to two primary platforms, namely, Xbox One and PS4.
 
 ```{r data preprocessing}
-data = read.csv("vgsales.csv")
-summary(data)
+df = read.csv("vgsales.csv")
+
+# Filter for games in 2015 and 2016, and on the PS4 or PC platform
+filtered_df <- df[df$Year %in% c(2015, 2016) & df$Platform %in% c("PS4", "XOne"), ]
+head(filtered_df)
+
 ```
 
 ## Including Plots
