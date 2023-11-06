@@ -2,7 +2,7 @@
 output: 
   stevetemplates::article:
     fig_caption: true
-#bibliography: master.bib
+bibliography: master.bib
 biblio-style: apsr
 title: "Multivariate Analysis in Video Games sales"
 thanks: "Replication files are available on the author's Github account (https://github.com/AlvaroNovillo). **Current version**: `r format(Sys.time(), '%B %d, %Y')`; **Corresponding author**: alvanovi@ucm.es."
@@ -11,7 +11,7 @@ author:
   affiliation: Universidad Carlos III
 - name: Polo
   affiliation: Universidad Carlos III
-abstract: "In this article, we perform several dimensionality reduction techniques and clustering algorithms on a video game sales dataset available on Kaggle  (https://www.kaggle.com/datasets/gregorut/videogamesales/data). Specifically, we use Principal Component Analysis (PCA) and Multidimensional Scaling (MDS) to reduce the dimensionality of the dataset. The article discusses the advantages and limitations of each technique and provides insights into the video game market based on the analysis."
+abstract: "In this article, we perform several dimensionality reduction techniques and clustering algorithms on a video game sales dataset available on Kaggle (https://www.kaggle.com/datasets/gregorut/videogamesales/data). Specifically, we use Principal Component Analysis (PCA) and Multidimensional Scaling (MDS) to reduce the dimensionality of the dataset. The article discusses the advantages and limitations of each technique and provides insights into the video game market based on the analysis."
 keywords: "PCA, Videogames, Sales"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 geometry: margin=1in
@@ -19,9 +19,11 @@ fontfamily: mathpazo
 fontsize: 11pt
 # spacing: double
 endnote: no
+
 ---
 
 ```{r setup, include=FALSE}
+options(kableExtra.latex.load_packages = TRUE)
 knitr::opts_chunk$set(cache=TRUE,
                       message=FALSE, warning=FALSE,
                       fig.path='figs/',
@@ -47,40 +49,30 @@ The dataset contains the following fields:
 * **NA_Sales** - Sales in NA (per Million)
 * **EU_Sales** - Sales in EU (per Million)
 * **JP_Sales** - Sales in JP (per Million)
-* **Other_Sales** - Sales in ROW^[Net Sales (ROW) means the gross amount billed or invoiced on sales by Company and its Affiliates and Sublicensees of Licensed Products, less the following: (a) customary trade, quantity, or cash discounts and commissions to non-affiliated brokers or agents to the extent actually allowed and taken; (b) amounts repaid or credited by reason of rejection or return; (c) to the extent separately stated on purchase orders, invoices, or other documents of sale, any taxes or other governmental charges levied on the production, sale, transportation, delivery, or use of a Licensed Product which is paid by or on behalf of Company; (d) outbound transportation costs prepaid or allowed and costs of insurance in transit; and (e) allowance for bad debt that is customary and reasonable for the industry and in accordance with generally accepted accounting principles.] (per Million)
+* **Other_Sales** - Sales in ROW^[Net Sales (ROW) means the gross amount billed or invoiced on sales by Company and its Affiliates and Sublicensees of Licensed Products, less the following: (a) customary trade, quantity, or cash discounts and commissions to non-affiliated brokers or agents to the extent actually allowed and taken; (b) amounts repaid or credited by reason of rejection or return; (c) to the extent separately stated on purchase orders, invoices, or other documents of sale, any taxes or other governmental charges levied on the production, sale, transportation, delivery, or use of a Licensed Product which is paid by or on behalf of Company; (d) outbound transportation costs prepaid or allowed and costs of insurance in transit; and (e) allowance for bad debt that is customary and reasonable for the industry and in accordance with generally accepted accounting principles. [@lawinsider]] (per Million)
 * **Global_Sales** - Total worldwide sales (per Million)
 
 ## Data Preprocessing
-The dataset contains 11 variables, including quantitative variables like sales figures across various regions (NA_Sales, EU_Sales, JP_Sales, Other_Sales, and Global_Sales), the release year, and the rank of the game based on overall sales. Additionally, it includes multi-state categorical variables like the genre, platform, and publisher of the game. To conform with the desired format, which requires at least two binary variables, we will filter out the video games of recent years and focus on titles that we are already acquainted with. Moreover, we will limit our research to two primary platforms, namely, Xbox One and PS4.
+The dataset contains 11 variables, including quantitative variables like sales figures across various regions (NA_Sales, EU_Sales, JP_Sales, Other_Sales, and Global_Sales), the release year, and the rank of the game based on overall sales. Additionally, it includes multi-state categorical variables like the genre, platform, and publisher of the game. To conform with the desired format, which requires at least two binary variables, we will filter out the video games of recent years and focus on titles that we are already acquainted with. Moreover, we will limit our research to two primary platforms, namely, Xbox One and PS4. 
 
-```{r data preprocessing}
+```{r preprocessing, echo=FALSE}
 df = read.csv("vgsales.csv")
 library(kableExtra)
 # Filter for games in 2015 and 2016, and on the PS4 or PC platform
 filtered_df <- df[df$Year %in% c(2015, 2016) & df$Platform %in% c("PS4", "XOne"), ]
 head(filtered_df) %>%
-  kbl(booktabs = T, caption = "Dataset") %>%
-  kable_styling(latex_options = c("striped", "hold_position"),
-                full_width = F) %>%
-  kable_paper("hover", full_width = F)
+  kbl(booktabs = T, caption = "Top five videogames, according to the sales ranking, that we are going to work with") %>%
+  kable_styling(latex_options = c("striped", "scale_down","hold_position"), position = "center")
+
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+In Table 1. the top five selling games for 2015 and 2016, in PS4 ans Xbox One are shown. As we can see, the first one, which is Call Of Duty: Black Ops 3 is among the top 50 best selling games of the dataset (in PS4).
 
 
-<!--
+
+
 # References
 \setlength{\parindent}{-0.2in}
 \setlength{\leftskip}{0.2in}
 \setlength{\parskip}{8pt}
 \vspace*{-0.2in}
 \noindent
--->
