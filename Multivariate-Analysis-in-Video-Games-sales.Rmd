@@ -55,11 +55,14 @@ The dataset contains 11 variables, including quantitative variables like sales f
 
 ```{r data preprocessing}
 df = read.csv("vgsales.csv")
-
+library(kableExtra)
 # Filter for games in 2015 and 2016, and on the PS4 or PC platform
 filtered_df <- df[df$Year %in% c(2015, 2016) & df$Platform %in% c("PS4", "XOne"), ]
-head(filtered_df)
-
+head(filtered_df) %>%
+  kbl(booktabs = T, caption = "Dataset") %>%
+  kable_styling(latex_options = c("striped", "hold_position"),
+                full_width = F) %>%
+  kable_paper("hover", full_width = F)
 ```
 
 ## Including Plots
