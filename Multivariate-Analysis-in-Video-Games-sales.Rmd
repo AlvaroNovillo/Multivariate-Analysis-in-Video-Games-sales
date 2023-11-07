@@ -23,6 +23,8 @@ endnote: no
 ---
 
 ```{r setup, include=FALSE}
+library(kableExtra)
+library(ggplot2)
 options(kableExtra.latex.load_packages = TRUE)
 knitr::opts_chunk$set(cache=TRUE,
                       message=FALSE, warning=FALSE,
@@ -57,7 +59,7 @@ The dataset contains 11 variables, including quantitative variables like sales f
 
 ```{r preprocessing, echo=FALSE}
 df = read.csv("vgsales.csv")
-library(kableExtra)
+
 # Filter for games in 2015 and 2016, and on the PS4 or PC platform
 filtered_df <- df[df$Year %in% c(2015, 2016) & df$Platform %in% c("PS4", "XOne"), ]
 head(filtered_df) %>%
@@ -65,7 +67,40 @@ head(filtered_df) %>%
   kable_styling(latex_options = c("striped", "scale_down","hold_position"), position = "center")
 
 ```
-In Table 1. the top five selling games for 2015 and 2016, in PS4 ans Xbox One are shown. As we can see, the first one, which is Call Of Duty: Black Ops 3 is among the top 50 best selling games of the dataset (in PS4).
+In Table 1. the top five selling games for 2015 and 2016, in PS4 ans Xbox One are shown. As we can see, the first one, which is Call Of Duty: Black Ops 3 is among the top 50 best selling games of the dataset (in PS4). 
+
+
+Examining the distribution of the filtered games rank, as seen in Figure \@ref(fig:rank_distrib), considering its skewness, it can be confirmed that the vast majority of games released during this time period did not have a significant impact on the industry. In actuality, the average ranking of games within our dataset stands at 9373.
+
+```{r rank_distrib,echo= FALSE,fig.cap = "Distribution of the log-transformed Rank values. The red dashed line represents the median of the distribution"}
+# Create a histogram
+# Calculate the median of the log-transformed Rank
+median_rank <- median(log(filtered_df$Rank))
+
+# Create a histogram with median line and text
+ggplot(data = filtered_df, aes(y = log(Rank))) +
+  geom_histogram(fill = "skyblue", color = "black") +
+  geom_hline(yintercept = median_rank, linetype = "dashed", color = "red") +
+  geom_text(aes(x = 70, y = median_rank - 0.1 ,label = round(exp(median_rank), 2)),
+            vjust = -1, hjust = -0.2, color = "red") +
+  labs(y = "log(Rank)") +
+  theme_minimal()
+```
+Since the ranking is solely determined by overall sales figures, it is worthwhile investigating whether the top-selling game in certain regions differs from that of others. Our expectation is that the best-selling games in Japan will differ from those sold in the West.
+
+```{r sales_pairs,echo=FALSE,fig.cap= "Correlation Plot of Sales Variables"}
+# Install and load the GGally package if not already installed
+# install.packages("GGally")
+library(GGally)
+
+# Select the variables of interest from the filtered_df dataset
+variables_of_interest <- filtered_df[, c("NA_Sales", "EU_Sales", "JP_Sales")]
+
+# Create a correlation plot
+ggpairs(variables_of_interest)
+
+```
+
 
 
 
