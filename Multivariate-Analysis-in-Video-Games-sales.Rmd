@@ -86,23 +86,111 @@ ggplot(data = filtered_df, aes(y = log(Rank))) +
   labs(y = "log(Rank)") +
   theme_minimal()
 ```
-Since the ranking is solely determined by overall sales figures, it is worthwhile investigating whether the top-selling game in certain regions differs from that of others. Our expectation is that the best-selling games in Japan will differ from those sold in the West.
 
-```{r sales_pairs,echo=FALSE,fig.cap= "Correlation Plot of Sales Variables"}
-# Install and load the GGally package if not already installed
-# install.packages("GGally")
-library(GGally)
+Figures \ref{num_games} and \ref{num_genres} allow us to explore the basic features of our dataset, informing us of the amount of games from each platform, and the amount of games of each genre. In our dataset, the mayority of the sold games are from PS4, and the most popular genre is Action, followed by Sports, Role-Playing and Shooter
 
-# Select the variables of interest from the filtered_df dataset
-variables_of_interest <- filtered_df[, c("NA_Sales", "EU_Sales", "JP_Sales")]
+```{r num_games, echo=FALSE, fig.cap= "Number of games of each platform inside the dataset"}
+# Load the ggplot2 library if not already loaded
+library(ggplot2)
 
-# Create a correlation plot
-ggpairs(variables_of_interest)
+# Create a barplot of the number of games per platform with custom colors
+platform_counts <- table(filtered_df$Platform)
+platform_counts_df <- data.frame(Platform = names(platform_counts), Count = as.vector(platform_counts))
+
+# Define custom colors for XOne and PS4
+custom_colors <- c("XOne" = "green", "PS4" = "blue")
+
+ggplot(data = platform_counts_df, aes(x = reorder(Platform, -Count), y = Count, fill = Platform)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = custom_colors) +  # Apply custom colors
+  labs(x = "Platform",
+       y = "Number of Games") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
+```{r num_genres, echo=FALSE, fig.cap= "Barplot of the amount of games of each genre"}
+# Create a barplot of the number of games per platform with custom colors
+genre_counts <- table(filtered_df$Genre)
+genre_counts_df <- data.frame(Genre = names(genre_counts), Count = as.vector(genre_counts))
+
+ggplot(data = genre_counts_df, aes(x = reorder(Genre, -Count), y = Count, fill = Genre)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Genre",
+       y = "Number of Games") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+Since the ranking is solely determined by overall sales figures, it is worthwhile investigating whether the top-selling game in certain regions differs from that of others. Our expectation is that the best-selling games in Japan will differ from those sold in the West.
+
+The correlation between the sales in Japan and the West is 0.394, with an even lower correlation of 0.299 with the North American market, as illustrated in Figure \ref{sales_pairs}. This raises compelling questions about the underlying factors that contribute to these correlations. It is clear that several key factors highlight the significant differences between the Oriental and Western video game industries, leading to this low correlation.
+
+First and foremost, the contrast in gaming preferences between regions plays a key role. In the West, specifically in North America, action and shooter games are incredibly popular. However, the Japanese market favours Role Playing Games (RPGs), which differs greatly from the Western market. As a result of these diverging gaming genres, differing sales patterns naturally occur, ultimately contributing to the observed low correlation.
+
+The marketing and localization strategies utilised in the Japanese video game industry are of great significance. Numerous Japanese games are designed with a primary focus on the local market, giving rise to gameplay and cultural elements that may not resonate as strongly with Western or North American audiences. Therefore, these games may not be successful beyond their intended audience in the East, resulting in a larger sales gap and a weaker association with these regions.
 
 
+```{r sales_pairs,echo=FALSE,fig.cap= "Correlation Plot of Sales Variables"}
+
+ggpairs(filtered_df[7:9], 
+             lower = list(mapping = aes(color = filtered_df$Genre)),
+             diag = list(continuous = "barDiag"))
+
+
+```
+
+To delve deeper into that matter, Table \ref{top_genre}  presents a comprehensive analysis of the percentage distribution of sales across the top three genres within diverse regions under investigation. It is evident from the table that the genre of Role-Playing Games (RPGs) enjoys significantly greater popularity in Japan as compared to North America and Europe. Strikingly, our research reveals that Action games emerge as the most prevalent genre in Japan, accounting for a substantial portion of the region's total sales, encompassing 35.28% of the market share.
+
+```{r top_genre,echo=FALSE}
+library(dplyr)
+
+# Group and summarize the data by genre for each region
+genre_sales <- filtered_df %>%
+  group_by(Genre) %>%
+  summarise(
+    Total_NA_Sales = sum(NA_Sales),
+    Total_EU_Sales = sum(EU_Sales),
+    Total_JP_Sales = sum(JP_Sales)
+  ) %>%
+  ungroup()
+
+# Calculate the total sales for each region
+total_sales <- genre_sales %>%
+  summarise(
+    Total_NA_Sales = sum(Total_NA_Sales),
+    Total_EU_Sales = sum(Total_EU_Sales),
+    Total_JP_Sales = sum(Total_JP_Sales)
+  )
+
+# Calculate the percentage of total sales for each genre in each region
+genre_sales <- genre_sales %>%
+  mutate(
+    Percentage_NA_Sales = round((Total_NA_Sales / total_sales$Total_NA_Sales) * 100,2),
+    Percentage_EU_Sales = round((Total_EU_Sales / total_sales$Total_EU_Sales) * 100,2),
+    Percentage_JP_Sales = round((Total_JP_Sales / total_sales$Total_JP_Sales) * 100,2)
+  )
+
+# Select the top 3 genres for each region
+top_genres <- genre_sales %>%
+  mutate(
+    Rank_NA = row_number(desc(Percentage_NA_Sales)),
+    Rank_EU = row_number(desc(Percentage_EU_Sales)),
+    Rank_JP = row_number(desc(Percentage_JP_Sales))
+  ) %>%
+  filter(Rank_NA <= 2 | Rank_EU <= 2 | Rank_JP <= 2) %>%
+  select(Genre, Percentage_NA_Sales, Percentage_EU_Sales, Percentage_JP_Sales)
+
+
+
+top_genres %>%
+  kbl(booktabs = T, caption = "Percentage distribution of sales for the top three genres in different regions") %>%
+  kable_styling(latex_options = c("striped", "scale_down","hold_position"), position = "center")
+
+
+```
 
 
 # References
