@@ -9,7 +9,7 @@ thanks: "Replication files are available on the author's Github account (https:/
 author:
 - name: Álvaro Novillo
   affiliation: Universidad Carlos III
-- name: Polo
+- name: Paolo Salvatore Lodato Olano
   affiliation: Universidad Carlos III
 abstract: "In this article, we perform several dimensionality reduction techniques and clustering algorithms on a video game sales dataset available on Kaggle (https://www.kaggle.com/datasets/gregorut/videogamesales/data). Specifically, we use Principal Component Analysis (PCA) and Multidimensional Scaling (MDS) to reduce the dimensionality of the dataset. The article discusses the advantages and limitations of each technique and provides insights into the video game market based on the analysis."
 keywords: "PCA, Videogames, Sales"
@@ -19,7 +19,6 @@ fontfamily: mathpazo
 fontsize: 11pt
 # spacing: double
 endnote: no
-
 ---
 
 ```{r setup, include=FALSE}
@@ -36,26 +35,29 @@ knitr::opts_chunk$set(cache=TRUE,
                       })
 ```
 
-
 ## About the dataset
+
 The dataset under consideration contains information on video games with sales greater than 100,000 copies between 1980 and 2016. The dataset includes 11,493 unique game sales, detailing the name, year of release, genre, platform, and sales figures across numerous regions.
 
-The dataset contains the following fields: 
+The dataset contains the following fields:
 
-* **Rank** - Ranked by overall sales
-* **Name** - Name of each videogame
-* **Platform** - The games platform
-* **Year** - Year of Release
-* **Genre** - Genre of Game
-* **Publisher** - Publisher of Game
-* **NA_Sales** - Sales in NA (per Million)
-* **EU_Sales** - Sales in EU (per Million)
-* **JP_Sales** - Sales in JP (per Million)
-* **Other_Sales** - Sales in ROW^[Net Sales (ROW) means the gross amount billed or invoiced on sales by Company and its Affiliates and Sublicensees of Licensed Products, less the following: (a) customary trade, quantity, or cash discounts and commissions to non-affiliated brokers or agents to the extent actually allowed and taken; (b) amounts repaid or credited by reason of rejection or return; (c) to the extent separately stated on purchase orders, invoices, or other documents of sale, any taxes or other governmental charges levied on the production, sale, transportation, delivery, or use of a Licensed Product which is paid by or on behalf of Company; (d) outbound transportation costs prepaid or allowed and costs of insurance in transit; and (e) allowance for bad debt that is customary and reasonable for the industry and in accordance with generally accepted accounting principles. [@lawinsider]] (per Million)
-* **Global_Sales** - Total worldwide sales (per Million)
+-   **Rank** - Ranked by overall sales
+-   **Name** - Name of each videogame
+-   **Platform** - The games platform
+-   **Year** - Year of Release
+-   **Genre** - Genre of Game
+-   **Publisher** - Publisher of Game
+-   **NA_Sales** - Sales in NA (per Million)
+-   **EU_Sales** - Sales in EU (per Million)
+-   **JP_Sales** - Sales in JP (per Million)
+-   **Other_Sales** - Sales in ROW[^1] (per Million)
+-   **Global_Sales** - Total worldwide sales (per Million)
+
+[^1]: Net Sales (ROW) means the gross amount billed or invoiced on sales by Company and its Affiliates and Sublicensees of Licensed Products, less the following: (a) customary trade, quantity, or cash discounts and commissions to non-affiliated brokers or agents to the extent actually allowed and taken; (b) amounts repaid or credited by reason of rejection or return; (c) to the extent separately stated on purchase orders, invoices, or other documents of sale, any taxes or other governmental charges levied on the production, sale, transportation, delivery, or use of a Licensed Product which is paid by or on behalf of Company; (d) outbound transportation costs prepaid or allowed and costs of insurance in transit; and (e) allowance for bad debt that is customary and reasonable for the industry and in accordance with generally accepted accounting principles. [@lawinsider]
 
 ## Data Preprocessing
-The dataset contains 11 variables, including quantitative variables like sales figures across various regions (NA_Sales, EU_Sales, JP_Sales, Other_Sales, and Global_Sales), the release year, and the rank of the game based on overall sales. Additionally, it includes multi-state categorical variables like the genre, platform, and publisher of the game. To conform with the desired format, which requires at least two binary variables, we will filter out the video games of recent years and focus on titles that we are already acquainted with. Moreover, we will limit our research to two primary platforms, namely, Xbox One and PS4. 
+
+The dataset contains 11 variables, including quantitative variables like sales figures across various regions (NA_Sales, EU_Sales, JP_Sales, Other_Sales, and Global_Sales), the release year, and the rank of the game based on overall sales. Additionally, it includes multi-state categorical variables like the genre, platform, and publisher of the game. To conform with the desired format, which requires at least two binary variables, we will filter out the video games of recent years and focus on titles that we are already acquainted with. Moreover, we will limit our research to two primary platforms, namely, Xbox One and PS4.
 
 ```{r preprocessing, echo=FALSE}
 df = read.csv("vgsales.csv")
@@ -67,8 +69,8 @@ head(filtered_df) %>%
   kable_styling(latex_options = c("striped", "scale_down","hold_position"), position = "center")
 
 ```
-In Table 1. the top five selling games for 2015 and 2016, in PS4 ans Xbox One are shown. As we can see, the first one, which is Call Of Duty: Black Ops 3 is among the top 50 best selling games of the dataset (in PS4). 
 
+In Table 1. the top five selling games for 2015 and 2016, in PS4 ans Xbox One are shown. As we can see, the first one, which is Call Of Duty: Black Ops 3 is among the top 50 best selling games of the dataset (in PS4).
 
 Examining the distribution of the filtered games rank, as seen in Figure \@ref(fig:rank_distrib), considering its skewness, it can be confirmed that the vast majority of games released during this time period did not have a significant impact on the industry. In actuality, the average ranking of games within our dataset stands at 9373.
 
@@ -128,21 +130,84 @@ Since the ranking is solely determined by overall sales figures, it is worthwhil
 
 The correlation between the sales in Japan and the West is 0.394, with an even lower correlation of 0.299 with the North American market, as illustrated in Figure \ref{sales_pairs}. This raises compelling questions about the underlying factors that contribute to these correlations. It is clear that several key factors highlight the significant differences between the Oriental and Western video game industries, leading to this low correlation.
 
-First and foremost, the contrast in gaming preferences between regions plays a key role. In the West, specifically in North America, action and shooter games are incredibly popular. However, the Japanese market favours Role Playing Games (RPGs), which differs greatly from the Western market. As a result of these diverging gaming genres, differing sales patterns naturally occur, ultimately contributing to the observed low correlation.
+To calculate the correlation matrix, use the formula $\text{Cor}(X, Y) = \frac{\text{Cov}(X, Y)}{\sigma_X \sigma_Y}$, where $\text{Cov}(X, Y)$ is the covariance between variables $X$ and $Y$, and $\sigma_X$ and $\sigma_Y$ are their respective standard deviations. The correlation matrix provides a comprehensive view of the linear relationships between variables in a dataset. It is useful for identifying patterns, understanding dependencies, and detecting multicollinearity in statistical analyses.
+
+```{r, echo=FALSE}
+data <- filtered_df[sapply(df,is.numeric)][,2:4]
+covariance <- cor(data)
+covariance
+```
+As seen in the results, the correlation between North America and Europe are more correlated due to these countries having similar western cultures and how their markets are targeted in a similar way, while Japan is more alienated and the taste of its citizens differs significantly from that of Western cultures. We can showcase it using a heatmap as following.
+
+```{r, echo=FALSE}
+library(reshape2)
+data1 <- melt(covariance) #To organize and format the data to create a heatmap
+ 
+ggplot(data1, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(
+                       mid = "#FFFFFF",
+                       high = "#FF0000") +
+  labs(title = "",
+       x = "",
+       y = "")
+```
+Due to the nature of the variables they present a positive correlation. If we'd like to know how much intercorrelation is present in our data, there are many different ways of calculating it so we've computed the different correlation measures to get a hint.
+
+```{r, echo=FALSE}
+intercorrelations <- function(X) {
+  # Get the dimensions of the matrix X
+  dim_X <- dim(X)
+  n <- dim_X[1]
+  p <- dim_X[2]
+  
+  # Compute the correlation matrix R
+  R <- cor(X)
+  
+  # Initialize the output vector q
+  q <- rep(0, 6)
+  
+  # Compute eigenvalues of R
+  lambda <- eigen(R)$values
+  
+  # Compute diagonal elements of the inverse of R
+  rjj <- diag(solve(R))
+  
+  # Calculate intercorrelations measures
+  q[1] <- (1 - min(lambda) / max(lambda))^(p + 2)
+  q[2] <- 1 - p / sum(1 / lambda)
+  q[3] <- 1 - sqrt(det(R))
+  q[4] <- (max(lambda) / p)^(3/2)
+  q[5] <- (1 - min(lambda) / p)^5
+  q[6] <- sum((1 - 1/rjj) / p)
+  
+  # Return the result vector q
+  return(q)
+}
+intercorrelations(data)
+```
+
+First and foremost, the contrast in gaming preferences between regions plays a key role. As seen in the intercorrelation measurements, there is some correlation in the sales. In the West, specifically in North America, action and shooter games are incredibly popular. However, the Japanese market favours Role Playing Games (RPGs), which differs greatly from the Western market. As a result of these diverging gaming genres, differing sales patterns naturally occur, ultimately contributing to the observed low correlation.
 
 The marketing and localization strategies utilised in the Japanese video game industry are of great significance. Numerous Japanese games are designed with a primary focus on the local market, giving rise to gameplay and cultural elements that may not resonate as strongly with Western or North American audiences. Therefore, these games may not be successful beyond their intended audience in the East, resulting in a larger sales gap and a weaker association with these regions.
 
-
 ```{r sales_pairs,echo=FALSE,fig.cap= "Correlation Plot of Sales Variables"}
-
+library(GGally)
 ggpairs(filtered_df[7:9], 
              lower = list(mapping = aes(color = filtered_df$Genre)),
              diag = list(continuous = "barDiag"))
-
-
 ```
 
-To delve deeper into that matter, Table \ref{top_genre}  presents a comprehensive analysis of the percentage distribution of sales across the top three genres within diverse regions under investigation. It is evident from the table that the genre of Role-Playing Games (RPGs) enjoys significantly greater popularity in Japan as compared to North America and Europe. Strikingly, our research reveals that Action games emerge as the most prevalent genre in Japan, accounting for a substantial portion of the region's total sales, encompassing 35.28% of the market share.
+From the previous plot we can see the variables are right skewed, and there seems to be some outliers in the scatter plots. For positive skewness we can apply a log transformation, which would help to normalize the distribution of the variables. Many statistical methods, including linear regression and analysis of variance, assume that the residuals are normally distributed. Normalizing our data would also be useful to help achieve zero mean and unit variance. We can visualize it through boxplots.
+
+```{r, echo=FALSE}
+par(mfrow = c(1, 3))
+boxplot(data[,1:3])
+boxplot(log(data[,1:3]))
+boxplot(log(scale(data[,1:3])))
+```
+
+To delve deeper into that matter, Table \ref{top_genre} presents a comprehensive analysis of the percentage distribution of sales across the top three genres within diverse regions under investigation. It is evident from the table that the genre of Role-Playing Games (RPGs) enjoys significantly greater popularity in Japan as compared to North America and Europe. Strikingly, our research reveals that Action games emerge as the most prevalent genre in Japan, accounting for a substantial portion of the region's total sales, encompassing 35.28% of the market share.
 
 ```{r top_genre,echo=FALSE}
 library(dplyr)
@@ -192,10 +257,12 @@ top_genres %>%
 
 ```
 
-
 # References
+
+```{=tex}
 \setlength{\parindent}{-0.2in}
 \setlength{\leftskip}{0.2in}
 \setlength{\parskip}{8pt}
 \vspace*{-0.2in}
+```
 \noindent
