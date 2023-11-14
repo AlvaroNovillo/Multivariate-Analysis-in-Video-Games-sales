@@ -72,7 +72,7 @@ head(filtered_df) %>%
 
 In Table 1. the top five selling games for 2015 and 2016, in PS4 ans Xbox One are shown. As we can see, the first one, which is Call Of Duty: Black Ops 3 is among the top 50 best selling games of the dataset (in PS4).
 
-Examining the distribution of the filtered games rank, as seen in Figure \@ref(fig:rank_distrib), considering its skewness, it can be confirmed that the vast majority of games released during this time period did not have a significant impact on the industry. In actuality, the average ranking of games within our dataset stands at 9373.
+Examining the distribution of the filtered games rank, as seen in Fig. 1, considering its skewness, it can be confirmed that the vast majority of games released during this time period did not have a significant impact on the industry. In actuality, the average ranking of games within our dataset stands at 9373.
 
 ```{r rank_distrib,echo= FALSE,fig.cap = "Distribution of the log-transformed Rank values. The red dashed line represents the median of the distribution"}
 # Create a histogram
@@ -89,7 +89,7 @@ ggplot(data = filtered_df, aes(y = log(Rank))) +
   theme_minimal()
 ```
 
-Figures \ref{num_games} and \ref{num_genres} allow us to explore the basic features of our dataset, informing us of the amount of games from each platform, and the amount of games of each genre. In our dataset, the mayority of the sold games are from PS4, and the most popular genre is Action, followed by Sports, Role-Playing and Shooter
+Figs. 2 and 3 allow us to explore the basic features of our dataset, informing us of the amount of games from each platform, and the amount of games of each genre. In our dataset, the mayority of the sold games are from PS4, and the most popular genre is Action, followed by Sports, Role-Playing and Shooter
 
 ```{r num_games, echo=FALSE, fig.cap= "Number of games of each platform inside the dataset"}
 # Load the ggplot2 library if not already loaded
@@ -126,33 +126,44 @@ ggplot(data = genre_counts_df, aes(x = reorder(Genre, -Count), y = Count, fill =
 
 ```
 
-Since the ranking is solely determined by overall sales figures, it is worthwhile investigating whether the top-selling game in certain regions differs from that of others. Our expectation is that the best-selling games in Japan will differ from those sold in the West.
+From the previous plot we can see the Rank variable is right skewed. For positive skewness we can apply a log transformation^[Since the variables referring to the sales in our dataset presents zeros, we have applied Box-Cox technique (See @box) to identify the appropriate transformation for our case (obtaining $\lambda \approx 0$), leading to the application of $log(x + \epsilon)$ transformation, being $\epsilon$ an arbitrary small constant.], which would help to normalize the distribution of the variables. Many statistical methods, including linear regression and analysis of variance, assume that the residuals are normally distributed. Normalizing our data would also be useful to help achieve zero mean and unit variance. In Fig. 4, we can visualize these transformations performed on the sales variables.
 
-The correlation between the sales in Japan and the West is 0.394, with an even lower correlation of 0.299 with the North American market, as illustrated in Figure \ref{sales_pairs}. This raises compelling questions about the underlying factors that contribute to these correlations. It is clear that several key factors highlight the significant differences between the Oriental and Western video game industries, leading to this low correlation.
-
-To calculate the correlation matrix, use the formula $\text{Cor}(X, Y) = \frac{\text{Cov}(X, Y)}{\sigma_X \sigma_Y}$, where $\text{Cov}(X, Y)$ is the covariance between variables $X$ and $Y$, and $\sigma_X$ and $\sigma_Y$ are their respective standard deviations. The correlation matrix provides a comprehensive view of the linear relationships between variables in a dataset. It is useful for identifying patterns, understanding dependencies, and detecting multicollinearity in statistical analyses.
-
-```{r, echo=FALSE}
+```{r box_transform, echo=FALSE, fig.cap= "Boxplots of the different transformations applyied to the sales data. From left to right, the original data, the log-transformed data and the log transformed and scaled data"}
+par(mfrow = c(1, 3))
 data <- filtered_df[sapply(df,is.numeric)][,2:4]
-covariance <- cor(data)
-covariance
+
+# Create boxplots
+boxplot(data, main = "Original Data")
+boxplot(log(data + 0.001) , main = "Log Transformed Data")
+boxplot(scale(log(data + 0.001)), main = "Log & Scaled Data")
+
+data <- as.data.frame(scale(log(data + 0.001)))
+
 ```
-As seen in the results, the correlation between North America and Europe are more correlated due to these countries having similar western cultures and how their markets are targeted in a similar way, while Japan is more alienated and the taste of its citizens differs significantly from that of Western cultures. We can showcase it using a heatmap as following.
+
+Since the ranking is solely determined by overall sales figures, it is worthwhile investigating whether the top-selling game in certain regions differs from that of others. Our expectation is that the best-selling games in Japan will differ from those sold in the West. To do such analysis, we will start by computing the *correlation matrix* of the sales in the different regions. 
 
 ```{r, echo=FALSE}
-library(reshape2)
-data1 <- melt(covariance) #To organize and format the data to create a heatmap
- 
-ggplot(data1, aes(x = Var1, y = Var2, fill = value)) +
-  geom_tile() +
-  scale_fill_gradient2(
-                       mid = "#FFFFFF",
-                       high = "#FF0000") +
-  labs(title = "",
-       x = "",
-       y = "")
+
+covariance <- cor(data)
+round(covariance,3) %>%
+  kbl(booktabs = T, caption = "Covariance matrix of sales") %>%
+  kable_styling(latex_options = c("striped","hold_position"), position = "center")
+
 ```
-Due to the nature of the variables they present a positive correlation. If we'd like to know how much intercorrelation is present in our data, there are many different ways of calculating it so we've computed the different correlation measures to get a hint.
+
+The *correlation matrix* can be computed as follows: $\text{Cor}(X, Y) = \frac{\text{Cov}(X, Y)}{\sigma_X \sigma_Y}$, where $\text{Cov}(X, Y)$ is the covariance between variables $X$ and $Y$, and $\sigma_X$ and $\sigma_Y$ are their respective standard deviations. The correlation matrix provides a comprehensive view of the linear relationships between variables in a dataset. It is useful for identifying patterns, understanding dependencies, and detecting multicollinearity in statistical analyses.
+
+Doing so (Table 2), we can see that the correlation between the sales in Japan and the West is 0.394, with an even lower correlation of 0.299 with the North American market, as illustrated in Fig. 4. This raises compelling questions about the underlying factors that contribute to these correlations. It is clear that several key factors highlight the significant differences between the Oriental and Western video game industries, leading to this low correlation. 
+
+First and foremost, the contrast in gaming preferences between regions plays a key role. As seen in the intercorrelation measurements, there is some correlation in the sales. In the West, specifically in North America, action and shooter games are incredibly popular. However, the Japanese market favours Role Playing Games (RPGs), which differs greatly from the Western market. As a result of these diverging gaming genres, differing sales patterns naturally occur, ultimately contributing to the observed low correlation.
+
+The marketing and localization strategies utilised in the Japanese video game industry are of great significance. Numerous Japanese games are designed with a primary focus on the local market, giving rise to gameplay and cultural elements that may not resonate as strongly with Western or North American audiences. Therefore, these games may not be successful beyond their intended audience in the East, resulting in a larger sales gap and a weaker association with these regions.
+
+On the contrary, the sales in North America and Europe are more correlated as these regions share similar western cultures and comparable marketing strategies. Conversely, Japan presents a more distinct market, with its citizens' tastes significantly differing from those of western cultures. Fig. 4 displays a correlation matrix using a heatmap to visualize this relationship.
+
+It is also worth noting that given the nature of the variables, they all present a positive correlation. To ensure the low *intercorrelation* between our sales data, we have computed different correlation measures^[The computed metrics are the ones that have been sugested in class. See @aurea1], presented in Table 3. 
+
 
 ```{r, echo=FALSE}
 intercorrelations <- function(X) {
@@ -184,30 +195,26 @@ intercorrelations <- function(X) {
   # Return the result vector q
   return(q)
 }
-intercorrelations(data)
+
+q <- intercorrelations(data)
+q <- t(as.data.frame(q))
+colnames(q) <- c('q1','q2','q3','q4','q5','q6')
+round(q,3) %>%
+  kbl(booktabs = T, caption = "Correlation measurements of the sales in the different regions") %>%
+  kable_styling(latex_options = c("striped","hold_position"), position = "center")
 ```
 
-First and foremost, the contrast in gaming preferences between regions plays a key role. As seen in the intercorrelation measurements, there is some correlation in the sales. In the West, specifically in North America, action and shooter games are incredibly popular. However, the Japanese market favours Role Playing Games (RPGs), which differs greatly from the Western market. As a result of these diverging gaming genres, differing sales patterns naturally occur, ultimately contributing to the observed low correlation.
-
-The marketing and localization strategies utilised in the Japanese video game industry are of great significance. Numerous Japanese games are designed with a primary focus on the local market, giving rise to gameplay and cultural elements that may not resonate as strongly with Western or North American audiences. Therefore, these games may not be successful beyond their intended audience in the East, resulting in a larger sales gap and a weaker association with these regions.
+As noted earlier when examining the correlation between pairs of markets, the intercorrelation between the three markets is low because of the aforementioned socio-cultural factors.
 
 ```{r sales_pairs,echo=FALSE,fig.cap= "Correlation Plot of Sales Variables"}
 library(GGally)
-ggpairs(filtered_df[7:9], 
-             lower = list(mapping = aes(color = filtered_df$Genre)),
+ggpairs(data, 
+             lower = list(mapping = aes(color = filtered_df$Publisher)),
              diag = list(continuous = "barDiag"))
 ```
 
-From the previous plot we can see the variables are right skewed, and there seems to be some outliers in the scatter plots. For positive skewness we can apply a log transformation, which would help to normalize the distribution of the variables. Many statistical methods, including linear regression and analysis of variance, assume that the residuals are normally distributed. Normalizing our data would also be useful to help achieve zero mean and unit variance. We can visualize it through boxplots.
 
-```{r, echo=FALSE}
-par(mfrow = c(1, 3))
-boxplot(data[,1:3])
-boxplot(log(data[,1:3]))
-boxplot(log(scale(data[,1:3])))
-```
-
-To delve deeper into that matter, Table \ref{top_genre} presents a comprehensive analysis of the percentage distribution of sales across the top three genres within diverse regions under investigation. It is evident from the table that the genre of Role-Playing Games (RPGs) enjoys significantly greater popularity in Japan as compared to North America and Europe. Strikingly, our research reveals that Action games emerge as the most prevalent genre in Japan, accounting for a substantial portion of the region's total sales, encompassing 35.28% of the market share.
+To delve deeper into the differences in the market, Table 4 presents a comprehensive analysis of the percentage distribution of sales across the top three genres within diverse regions under investigation. It is evident from the table that the genre of Role-Playing Games (RPGs) enjoys significantly greater popularity in Japan as compared to North America and Europe. Strikingly, our research reveals that Action games emerge as the most prevalent genre in Japan, accounting for a substantial portion of the region's total sales, encompassing 35.28% of the market share.
 
 ```{r top_genre,echo=FALSE}
 library(dplyr)
