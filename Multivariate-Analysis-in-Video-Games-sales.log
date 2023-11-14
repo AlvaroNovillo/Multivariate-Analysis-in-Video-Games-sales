@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.10.12) (preloaded format=pdflatex 2023.11.7)  14 NOV 2023 12:54
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.10.12) (preloaded format=pdflatex 2023.11.7)  14 NOV 2023 16:24
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -699,7 +699,7 @@ File: figs/sales_pairs.pdf Graphic file (type pdf)
 Package pdftex.def Info: figs/sales_pairs.pdf  used on input line 475.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [6] [7 <./figs/sales_pairs.pdf>]
-Overfull \hbox (0.46538pt too wide) in paragraph at lines 517--520
+Overfull \hbox (0.46538pt too wide) in paragraph at lines 520--523
  []\T1/ppl/m/n/10.95 Grané, Au-rea. n.d. ``Mul-ti-di-men-sional Datasets.'' $ht
 tps : / / aulaglobal . uc3m . es / mod / resource /
  []
@@ -712,7 +712,7 @@ L3 programming layer <2023-11-01>
  ) 
 Here is how much of TeX's memory you used:
  13454 strings out of 474592
- 207558 string characters out of 5747215
+ 207524 string characters out of 5747215
  1939533 words of memory out of 5000000
  35360 multiletter control sequences out of 15000+600000
  608655 words of font info for 150 fonts, out of 8000000 for 9000
@@ -726,8 +726,8 @@ etic/uhvb8a.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/urw/pala
 tino/uplb8a.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/urw/pala
 tino/uplr8a.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/urw/pala
 tino/uplri8a.pfb>
-Output written on Multivariate-Analysis-in-Video-Games-sales.pdf (8 pages, 1687
-94 bytes).
+Output written on Multivariate-Analysis-in-Video-Games-sales.pdf (8 pages, 1681
+77 bytes).
 PDF statistics:
  96 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

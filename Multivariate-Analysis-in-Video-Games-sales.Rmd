@@ -206,15 +206,79 @@ round(q,3) %>%
 
 As noted earlier when examining the correlation between pairs of markets, the intercorrelation between the three markets is low because of the aforementioned socio-cultural factors.
 
-```{r sales_pairs,echo=FALSE,fig.cap= "Correlation Plot of Sales Variables"}
+```{r, echo=FALSE}
 library(GGally)
-ggpairs(data, 
-             lower = list(mapping = aes(color = filtered_df$Publisher)),
-             diag = list(continuous = "barDiag"))
+library(gridExtra)
+plot.mpg <- ggpairs(data, 
+                    lower = list(mapping = aes(color = filtered_df$Genre)),
+                    diag = list(continuous = "barDiag")) +    
+    scale_fill_manual(values=c("Shooter" = "#FF5733",      # Assigning colors to each category
+                                "Sports" = "#3366FF", 
+                                "Role-Playing" = "#FF33FF", 
+                                "Action" = "#FFCC33", 
+                                "Fighting" = "#33FF57", 
+                                "Racing" = "#FF3366", 
+                                "Adventure" = "#33FFFF",
+                                "Platform" = "#9966FF",
+                                "Misc" = "#999999",
+                                "Simulation" = "#FF9933",
+                                "Strategy" = "#33FFCC",
+                                "Puzzle" = "#FF33CC")) +
+    scale_colour_manual(values=c("Shooter" = "#FF5733",      # Assigning colors to each category
+                                "Sports" = "#3366FF", 
+                                "Role-Playing" = "#FF33FF", 
+                                "Action" = "#FFCC33", 
+                                "Fighting" = "#33FF57", 
+                                "Racing" = "#FF3366", 
+                                "Adventure" = "#33FFFF",
+                                "Platform" = "#9966FF",
+                                "Misc" = "#999999",
+                                "Simulation" = "#FF9933",
+                                "Strategy" = "#33FFCC",
+                                "Puzzle" = "#FF33CC"))
+
+# Save the ggpairs plot as a PDF
+pdf("ggpairs_plot.pdf")
+print(plot.mpg)
+# Convert the saved ggpairs plot to a grob
+saved_plot <- grid::grid.grab()
+
+
+# Generate the legend separately
+legend_plot <- ggplot(data, aes(x = 1, y = 1, color = filtered_df$Genre)) +
+  geom_point(size = 5) +
+  scale_color_manual(name = "Genre",  # Legend title
+                     values = c("Shooter" = "#FF5733",      # Assigning colors to each category
+                                "Sports" = "#3366FF", 
+                                "Role-Playing" = "#FF33FF", 
+                                "Action" = "#FFCC33", 
+                                "Fighting" = "#33FF57", 
+                                "Racing" = "#FF3366", 
+                                "Adventure" = "#33FFFF",
+                                "Platform" = "#9966FF",
+                                "Misc" = "#999999",
+                                "Simulation" = "#FF9933",
+                                "Strategy" = "#33FFCC",
+                                "Puzzle" = "#FF33CC"))  +
+  theme_void() +
+  theme(legend.position = "right")
+
+
+# Extract the legend. Returns a gtable
+leg <- get_legend(legend_plot)
+
+# Convert to a ggplot and print
+# Arrange the plots side by side
+par(mfrow = c(1, 2))
+plot = grid.arrange(saved_plot, as_ggplot(leg), ncol = 2,widths = c(0.8, 0.2))
+
 ```
 
+```{r sales_pairs,echo=FALSE,fig.cap= "Correlation Plot of Video Game Sales in Different Regions"}
+as_ggplot(plot)
+```
 
-To delve deeper into the differences in the market, Table 4 presents a comprehensive analysis of the percentage distribution of sales across the top three genres within diverse regions under investigation. It is evident from the table that the genre of Role-Playing Games (RPGs) enjoys significantly greater popularity in Japan as compared to North America and Europe. Strikingly, our research reveals that Action games emerge as the most prevalent genre in Japan, accounting for a substantial portion of the region's total sales, encompassing 35.28% of the market share.
+To delve deeper into the differences in the market, Table 4 presents a comprehensive analysis of the percentage distribution of sales across the top three genres within diverse regions under investigation. It is evident from the table that the genre of Role-Playing Games (RPGs) enjoys significantly greater popularity in Japan as compared to North America and Europe. Strikingly, our research reveals that Action games emerge as the most prevalent genre in Japan, accounting for a substantial portion of the region's total sales, encompassing 35.28% of the market share.This results can also be found in Fig. 5, where we can see almost all Role-playing and Action games above the diagonal line (y = x), indicating the higher popularity of this genres in the Japanese market  
 
 ```{r top_genre,echo=FALSE}
 library(dplyr)
