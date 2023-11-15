@@ -209,6 +209,9 @@ As noted earlier when examining the correlation between pairs of markets, the in
 ```{r, echo=FALSE}
 library(GGally)
 library(gridExtra)
+library(cowplot)
+library(ggpubr)
+
 plot.mpg <- ggpairs(data, 
                     lower = list(mapping = aes(color = filtered_df$Genre)),
                     diag = list(continuous = "barDiag")) +    
@@ -271,7 +274,6 @@ leg <- get_legend(legend_plot)
 # Arrange the plots side by side
 par(mfrow = c(1, 2))
 plot = grid.arrange(saved_plot, as_ggplot(leg), ncol = 2,widths = c(0.8, 0.2))
-
 ```
 
 ```{r sales_pairs,echo=FALSE,fig.cap= "Correlation Plot of Video Game Sales in Different Regions"}
@@ -324,9 +326,74 @@ top_genres <- genre_sales %>%
 top_genres %>%
   kbl(booktabs = T, caption = "Percentage distribution of sales for the top three genres in different regions") %>%
   kable_styling(latex_options = c("striped", "scale_down","hold_position"), position = "center")
-
-
 ```
+
+After scaling our data, we are now prepared to perform Principal Component Analysis (PCA). Scaling is a crucial preprocessing step as it ensures that each variable contributes equally to the analysis by standardizing their scales. PCA is particularly sensitive to the scale of variables, and standardizing them helps prevent variables with larger scales from dominating the analysis.
+
+Principal Component Analysis (PCA) is a crucial step in our data analysis pipeline for several reasons. PCA allows us to effectively reduce the dimensionality of our dataset by transforming the original variables into a set of uncorrelated principal components, therefore addressing multicollinearity, capturing the essential information with fewer variables. This reduction is particularly valuable when dealing with high-dimensional datasets, enabling more manageable and interpretable analyses. Furthermore, PCA helps reveal underlying patterns and relationships within the data by highlighting the variables that contribute most to the observed variability. 
+
+```{r, echo=FALSE}
+data <- scale(log(filtered_df[sapply(filtered_df,is.numeric)][2:6] + 0.001))
+
+# Perform PCA
+pca_result <- prcomp(data, scale = TRUE)
+
+# View the summary of the PCA
+summary(pca_result)$importance  %>%
+  kbl(booktabs = T, caption = "Summary of PCA") %>%
+  kable_styling(latex_options = c("striped", "scale_down","hold_position"), position = "center")
+```
+
+As seen by the results, 0.97 of the total variability in the dataset has been explained by the three first components. The cumulative proportion of variance explained by each of the last two principal component is can be neglected. By using the package ${\tt factoextra}$ we can create a Scree plot which help decide on the number of components or factors to retain in the analysis. It displays the eigenvalues of the principal components or factors in descending order.
+
+```{r, echo=FALSE}
+library(factoextra)
+fviz_eig(pca_result, addlabels = TRUE, ylim = c(0, 75))
+```
+
+```{r, echo=FALSE}
+fviz_pca_var(pca_result, col.var = "black")
+```
+
+```{r, echo=FALSE}
+fviz_pca_ind(pca_result,
+             geom.ind = "point", # show points only (nbut not "text")
+             col.ind = filtered_df$Platform, # color by groups
+             palette = c("#00AFBB", "#FC4E07"),
+             addEllipses = TRUE, # Concentration ellipses
+             legend.title = "Groups"
+             )
+```
+The ${\tt fviz\_pca\_biplot}$ function in R, part of the ${\tt factoextra}$ package, creates a biplot for Principal Component Analysis (PCA) results. A biplot simultaneously displays both the observations and variables in the same plot, allowing for a quick visual assessment of relationships between them. Due to the large size of our dataset we will display only the top 30 most contributing observations. This is useful because it enables an intuitive exploration of the contribution of variables to each principal component and the relationships between observations in the reduced-dimensional space.
+
+```{r, echo=FALSE}
+fviz_pca_biplot(pca_result, repel = TRUE,
+                select.ind = list(contrib = 30), #Top 30 most contributing individuals
+                col.var = "#2E9FDF", # Variables color
+                col.ind = "#696969"  # Individuals color
+                )
+```
+
+
+
+```{r}
+# Percentage of variance explained by each principal component
+var_explained <- pca_result$sdev^2 / sum(pca_result$sdev^2) * 100
+
+# Cumulative percentage of variance explained
+cumulative_var_explained <- cumsum(var_explained)
+
+# Choose the number of components explaining 95% of cumulative variance
+num_components <- which(cumulative_var_explained >= 95)[1]
+
+# Retain the selected number of components
+selected_components <- pca_result$x[, 1:num_components]
+
+# Print the selected components
+print(colnames(selected_components))
+```
+
+
 
 # References
 
