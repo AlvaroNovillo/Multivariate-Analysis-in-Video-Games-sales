@@ -72,7 +72,7 @@ head(filtered_df) %>%
 
 In Table 1. the top five selling games for 2015 and 2016, in PS4 ans Xbox One are shown. As we can see, the first one, which is Call Of Duty: Black Ops 3 is among the top 50 best selling games of the dataset (in PS4).
 
-Examining the distribution of the filtered games rank, as seen in Fig. 1, considering its skewness, it can be confirmed that the vast majority of games released during this time period did not have a significant impact on the industry. In actuality, the average ranking of games within our dataset stands at 9373.
+Examining the distribution of the filtered games rank, as seen in Fig. 1, considering its skewness, it can be confirmed that the vast majority of games released during this time period did not have a significant impact on the industry. In fact, the average ranking of games within our dataset stands at 9373.
 
 ```{r rank_distrib,echo= FALSE,fig.cap = "Distribution of the log-transformed Rank values. The red dashed line represents the median of the distribution"}
 # Create a histogram
@@ -126,7 +126,7 @@ ggplot(data = genre_counts_df, aes(x = reorder(Genre, -Count), y = Count, fill =
 
 ```
 
-From the previous plot we can see the Rank variable is right skewed. For positive skewness we can apply a log transformation^[Since the variables referring to the sales in our dataset presents zeros, we have applied Box-Cox technique (See @box) to identify the appropriate transformation for our case (obtaining $\lambda \approx 0$), leading to the application of $log(x + \epsilon)$ transformation, being $\epsilon$ an arbitrary small constant.], which would help to normalize the distribution of the variables. Many statistical methods, including linear regression and analysis of variance, assume that the residuals are normally distributed. Normalizing our data would also be useful to help achieve zero mean and unit variance. In Fig. 4, we can visualize these transformations performed on the sales variables.
+From the previous plot we can see the Rank variable is right skewed. For positive skewness we can apply a log transformation^[Since the variables referring to the sales in our dataset presents zeros, we have applied Box-Cox technique (See @box) to identify the appropriate transformation for our case (obtaining $\lambda \approx 0$), leading to the application of $log(x + \epsilon)$ transformation, being $\epsilon > 0$ an arbitrary small constant.], which would help to normalize the distribution of the variables. Many statistical methods, including linear regression and analysis of variance, assume that the residuals are normally distributed. Normalizing our data would also be useful to help achieve zero mean and unit variance. In Fig. 4, we can visualize these transformations performed on the sales variables.
 
 ```{r box_transform, echo=FALSE, fig.cap= "Boxplots of the different transformations applyied to the sales data. From left to right, the original data, the log-transformed data and the log transformed and scaled data"}
 par(mfrow = c(1, 3))
@@ -154,13 +154,11 @@ round(covariance,3) %>%
 
 The *correlation matrix* can be computed as follows: $\text{Cor}(X, Y) = \frac{\text{Cov}(X, Y)}{\sigma_X \sigma_Y}$, where $\text{Cov}(X, Y)$ is the covariance between variables $X$ and $Y$, and $\sigma_X$ and $\sigma_Y$ are their respective standard deviations. The correlation matrix provides a comprehensive view of the linear relationships between variables in a dataset. It is useful for identifying patterns, understanding dependencies, and detecting multicollinearity in statistical analyses.
 
-Doing so (Table 2), we can see that the correlation between the sales in Japan and the West is 0.394, with an even lower correlation of 0.299 with the North American market, as illustrated in Fig. 4. This raises compelling questions about the underlying factors that contribute to these correlations. It is clear that several key factors highlight the significant differences between the Oriental and Western video game industries, leading to this low correlation. 
+Doing so (Table 2), we can see that the correlation between the sales in Japan and the Western market is 0.044, with an even lower correlation of 0.01 with the American market, as illustrated in Fig. 5. This raises compelling questions about the underlying factors that contribute to these correlations. It is clear that several key factors highlight the significant differences between the Oriental and Western video game industries, leading to this low correlation. 
 
-First and foremost, the contrast in gaming preferences between regions plays a key role. As seen in the intercorrelation measurements, there is some correlation in the sales. In the West, specifically in North America, action and shooter games are incredibly popular. However, the Japanese market favours Role Playing Games (RPGs), which differs greatly from the Western market. As a result of these diverging gaming genres, differing sales patterns naturally occur, ultimately contributing to the observed low correlation.
+First and foremost, the contrast in gaming preferences between regions plays a key role. As seen in the intercorrelation measurements, there is some correlation in the sales in Europe and NA. In the West, specifically in North America, action and shooter games are incredibly popular. However, the Japanese market favours Role Playing Games (RPGs), which differs greatly from the Western market. As a result of these diverging gaming genres, differing sales patterns naturally occur, ultimately contributing to the observed low correlation.
 
-The marketing and localization strategies utilised in the Japanese video game industry are of great significance. Numerous Japanese games are designed with a primary focus on the local market, giving rise to gameplay and cultural elements that may not resonate as strongly with Western or North American audiences. Therefore, these games may not be successful beyond their intended audience in the East, resulting in a larger sales gap and a weaker association with these regions.
-
-On the contrary, the sales in North America and Europe are more correlated as these regions share similar western cultures and comparable marketing strategies. Conversely, Japan presents a more distinct market, with its citizens' tastes significantly differing from those of western cultures. Fig. 4 displays a correlation matrix using a heatmap to visualize this relationship.
+The marketing and localization strategies employed in the Japanese video game industry hold immense importance. Many Japanese games prioritize the local market, leading to gameplay and cultural elements that might not strongly resonate with Western or North American audiences. Consequently, these games might struggle to achieve success beyond their intended Eastern audience, resulting in a larger sales gap and weaker association with these regions. In contrast, sales in North America and Europe tend to be more closely linked due to their shared Western cultures and comparable marketing approaches. Conversely, Japan represents a distinct market, with its citizens' preferences significantly differing from those of Western cultures.
 
 It is also worth noting that given the nature of the variables, they all present a positive correlation. To ensure the low *intercorrelation* between our sales data, we have computed different correlation measures^[The computed metrics are the ones that have been sugested in class. See @aurea1], presented in Table 3. 
 
@@ -215,8 +213,8 @@ library(ggpubr)
 plot.mpg <- ggpairs(data, 
                     lower = list(mapping = aes(color = filtered_df$Genre)),
                     diag = list(continuous = "barDiag")) +    
-    scale_fill_manual(values=c("Shooter" = "#FF5733",      # Assigning colors to each category
-                                "Sports" = "#3366FF", 
+    scale_fill_manual(values=c("Shooter" ="#3366FF" ,      # Assigning colors to each category
+                                "Sports" = "#FF5733", 
                                 "Role-Playing" = "#FF33FF", 
                                 "Action" = "#FFCC33", 
                                 "Fighting" = "#33FF57", 
@@ -251,8 +249,8 @@ saved_plot <- grid::grid.grab()
 legend_plot <- ggplot(data, aes(x = 1, y = 1, color = filtered_df$Genre)) +
   geom_point(size = 5) +
   scale_color_manual(name = "Genre",  # Legend title
-                     values = c("Shooter" = "#FF5733",      # Assigning colors to each category
-                                "Sports" = "#3366FF", 
+                     values = c("Shooter" = "#3366FF",      # Assigning colors to each category
+                                "Sports" = "#FF5733", 
                                 "Role-Playing" = "#FF33FF", 
                                 "Action" = "#FFCC33", 
                                 "Fighting" = "#33FF57", 
@@ -280,7 +278,7 @@ plot = grid.arrange(saved_plot, as_ggplot(leg), ncol = 2,widths = c(0.8, 0.2))
 as_ggplot(plot)
 ```
 
-To delve deeper into the differences in the market, Table 4 presents a comprehensive analysis of the percentage distribution of sales across the top three genres within diverse regions under investigation. It is evident from the table that the genre of Role-Playing Games (RPGs) enjoys significantly greater popularity in Japan as compared to North America and Europe. Strikingly, our research reveals that Action games emerge as the most prevalent genre in Japan, accounting for a substantial portion of the region's total sales, encompassing 35.28% of the market share.This results can also be found in Fig. 5, where we can see almost all Role-playing and Action games above the diagonal line (y = x), indicating the higher popularity of this genres in the Japanese market  
+To delve deeper into the differences in the market, Table 4 presents a comprehensive analysis of the percentage distribution of sales across the top three genres within diverse regions under investigation. It is evident from the table that the Role-Playing Games (RPGs) enjoys significantly greater popularity in Japan as compared to North America and Europe. Strikingly, our research reveals that Action games emerge as the most prevalent genre in Japan, accounting for a substantial portion of the region's total sales, encompassing 35.28% of the market share. This results can also be found in Fig. 5, where we can see almost all Role-playing and Action games are above the diagonal line (y = x) in the last row plots (where Japanese sales is the y axis), indicating the higher popularity of this genres in the Japanese market  
 
 ```{r top_genre,echo=FALSE}
 library(dplyr)
@@ -325,12 +323,15 @@ top_genres <- genre_sales %>%
 
 top_genres %>%
   kbl(booktabs = T, caption = "Percentage distribution of sales for the top three genres in different regions") %>%
-  kable_styling(latex_options = c("striped", "scale_down","hold_position"), position = "center")
+  kable_styling(latex_options = c("striped","hold_position"), position = "center")
 ```
 
-After scaling our data, we are now prepared to perform Principal Component Analysis (PCA). Scaling is a crucial preprocessing step as it ensures that each variable contributes equally to the analysis by standardizing their scales. PCA is particularly sensitive to the scale of variables, and standardizing them helps prevent variables with larger scales from dominating the analysis.
+## Principal Component Analysis (PCA)
+After an initial exploration and necesary preprocessing of the dataset, we are now ready to conduct Principal Component Analysis (PCA) to reduce the problem's dimensionality.
 
-Principal Component Analysis (PCA) is a crucial step in our data analysis pipeline for several reasons. PCA allows us to effectively reduce the dimensionality of our dataset by transforming the original variables into a set of uncorrelated principal components, therefore addressing multicollinearity, capturing the essential information with fewer variables. This reduction is particularly valuable when dealing with high-dimensional datasets, enabling more manageable and interpretable analyses. Furthermore, PCA helps reveal underlying patterns and relationships within the data by highlighting the variables that contribute most to the observed variability. 
+Principal Component Analysis (PCA) constitutes a vital stage in our data analysis pipeline for several reasons. It enables us to reduce the dimensionality of our dataset by transforming the initial variables into a set of independent principal components, which capture the essential information with fewer variables. This reduction becomes particularly valuable when dealing with datasets of high dimensionality, as it allows for more manageable and comprehensible analyses. 
+
+In our Principal Component Analysis, all avaliable sales variables will be taken into account. Thus, beside from the sales of the three principal regions at study, we will also consider the Sales in ROW^[See @lawinsider], and the Global sales (per Million)
 
 ```{r, echo=FALSE}
 data <- scale(log(filtered_df[sapply(filtered_df,is.numeric)][2:6] + 0.001))
@@ -339,60 +340,89 @@ data <- scale(log(filtered_df[sapply(filtered_df,is.numeric)][2:6] + 0.001))
 pca_result <- prcomp(data, scale = TRUE)
 
 # View the summary of the PCA
-summary(pca_result)$importance  %>%
+round(summary(pca_result)$importance,3)  %>%
   kbl(booktabs = T, caption = "Summary of PCA") %>%
-  kable_styling(latex_options = c("striped", "scale_down","hold_position"), position = "center")
+  kable_styling(latex_options = c("striped","hold_position"), position = "center")
 ```
 
-As seen by the results, 0.97 of the total variability in the dataset has been explained by the three first components. The cumulative proportion of variance explained by each of the last two principal component is can be neglected. By using the package ${\tt factoextra}$ we can create a Scree plot which help decide on the number of components or factors to retain in the analysis. It displays the eigenvalues of the principal components or factors in descending order.
+As seen by the results (Table 5), $90.8\%$ of the total variability in the dataset has been explained by the two first components. Thus, these two variables can accurately represent the data. By using the package ${\tt factoextra}$ we can create a Scree plot (Fig. 6) that visualizes our decision on the number of components or factors retained in the analysis.
 
-```{r, echo=FALSE}
+```{r scree, echo=FALSE, fig.cap = "Scree plot visualizing the number of components retained in the analysis. The red dashed line represents the cutoff selected "}
 library(factoextra)
-fviz_eig(pca_result, addlabels = TRUE, ylim = c(0, 75))
+# Plotting PCA eigenvalues
+plot <- fviz_eig(pca_result, addlabels = TRUE, ylim = c(0, 75), x = "Principal Components", y = "% of Explained Variance", top = 2, linetype = "dashed", geom = c("line"))
+
+# Adding a horizontal line at y = 20.6
+plot + geom_hline(yintercept = 20.6, linetype = "dashed", color = "red")
+
 ```
 
-```{r, echo=FALSE}
-fviz_pca_var(pca_result, col.var = "black")
-```
+By examining the eigenvector that corresponds to the chosen variables, in this instance, the two highest eigenvalues' eigenvectors, we can provide an interpretation and significance to the selected variables.
 
 ```{r, echo=FALSE}
+round(pca_result $rotation[, 1:2],2)  %>%
+  kbl(booktabs = T, caption = "Variables contribution to the first two principal components") %>%
+  kable_styling(latex_options = c("striped","hold_position"), position = "center")
+
+```
+
+The first principal component **PC1** seems to be influenced by each variable, having higher (negative) loadings for NA_Sales, EU_Sales, Other_Sales, and Global_Sales. This component highlights that these five criteria simultaneously fluctuate. Thus, if sales in a particular region increase, they tend to increase in the other regions, thereby increasing the Global Sales and Sales in the ROW. Sales in Japan also increase, but at a lower rate, due to the previously mentioned low correlation of the Japanese market with respect to the others. It can be understood as a measure of the total amount of sales
+
+The second principal component **PC2** seems to represent a pattern primarily related to sales in Japan, distinguishing it from sales in other regions.
+
+```{r pcaplot, echo=FALSE, fig.cap = "Principal Component Analysis (PCA) plot displaying the top selling game genres' distribution with respect to the two principal components. Points in yellow corresponds to Action games, those in pink to Role-Playing games, those in blue to Shooters, and the rest of the genres are visualized in grey."}
+
+
+# Create a custom color palette
+selected_colors <- c("Action" = "#FFCC33", "Role-Playing" = "#FF33FF", "Shooter" = "#3366FF")
+other_color <- "grey"  # Color for the rest of the points
+
+# Assign colors based on genres
+colors <- ifelse(filtered_df$Genre %in% names(selected_colors),
+                 selected_colors[as.character(filtered_df$Genre)],
+                 other_color)
+
+# Create a custom legend labels
+legend_labels <- c("Others","Action", "Role-Playing", "Shooter")
+
+# Create factors for the legend alignment
+legend_factors <- factor(ifelse(filtered_df$Genre %in% names(selected_colors),
+                               as.character(filtered_df$Genre),
+                               "Others"),
+                         levels = c("Others","Action", "Role-Playing", "Shooter" ))
+
+# Visualize PCA with customized colors
 fviz_pca_ind(pca_result,
-             geom.ind = "point", # show points only (nbut not "text")
-             col.ind = filtered_df$Platform, # color by groups
-             palette = c("#00AFBB", "#FC4E07"),
+             geom.ind = "point", # Show points only (not "text")
+             col.ind = colors,   # Use customized colors
              addEllipses = TRUE, # Concentration ellipses
-             legend.title = "Groups"
-             )
-```
-The ${\tt fviz\_pca\_biplot}$ function in R, part of the ${\tt factoextra}$ package, creates a biplot for Principal Component Analysis (PCA) results. A biplot simultaneously displays both the observations and variables in the same plot, allowing for a quick visual assessment of relationships between them. Due to the large size of our dataset we will display only the top 30 most contributing observations. This is useful because it enables an intuitive exploration of the contribution of variables to each principal component and the relationships between observations in the reduced-dimensional space.
+             palette = c(other_color, unique(selected_colors)),
+             legend.title = "Genres",
+             addLegend = TRUE,
+             legend.labels = legend_labels,
+             legend.key = list(space = "top", columns = 2), # Adjust legend appearance
+             habillage = legend_factors # Use legend factors for alignment
+)
 
-```{r, echo=FALSE}
-fviz_pca_biplot(pca_result, repel = TRUE,
-                select.ind = list(contrib = 30), #Top 30 most contributing individuals
-                col.var = "#2E9FDF", # Variables color
-                col.ind = "#696969"  # Individuals color
-                )
 ```
 
+Fig. 7 presents the principal components analysis of leading game genres. The games situated towards the left in the plot are indicative of the highest sales volumes, while those positioned towards the top mainly pertain to games predominantly sold in Japan. Shooter games (illustrated as blue crosses) are the most widely sold games worldwide, with some examples proving particularly profitable in the Japanese market, based by the points located in the top-left quadrant. As previously highlighted, certain action games (represented as yellow triangles) and role-playing games (denoted by pink squares) have a predominant presence in the Japanese market, with some exclusively marketed within this region (located notably in the top-right quadrant of the plot).
 
+To conclude the PCA analysis, we can determine how much each variable is represented in a given component. To do so, we will implement the *square cosine* technique. Mathematically, the Cos2 for a variable or category in a given component is calculated as the squared cosine of the variable's/category's coordinates on that component.
 
-```{r}
-# Percentage of variance explained by each principal component
-var_explained <- pca_result$sdev^2 / sum(pca_result$sdev^2) * 100
+The Cos2 values range between 0 and 1, where:
 
-# Cumulative percentage of variance explained
-cumulative_var_explained <- cumsum(var_explained)
+-   A low Cos2 value indicates that the variable/category is not well represented by the component.
+-   A high Cos2 value signifies a strong representation of the variable/category on the component.
 
-# Choose the number of components explaining 95% of cumulative variance
-num_components <- which(cumulative_var_explained >= 95)[1]
+```{r repre, echo=FALSE, fig.cap = "Visualization of the quality of representation (Cos2) of rows/columns from the results of Principal Component Analysis (PCA). The color gradient represents the strength of representation, with black indicating low representation, orange indicating moderate representation, and red indicating high representation."}
+fviz_pca_var(pca_result, col.var = "cos2",
+            repel = TRUE, midpoint=0.5) +
+  scale_color_gradient(limits = c(0.7, 1), low = "black", high = "#FF3366" )
 
-# Retain the selected number of components
-selected_components <- pca_result$x[, 1:num_components]
-
-# Print the selected components
-print(colnames(selected_components))
 ```
 
+Fig. 8 combines a biplot of the attributes with the computed cos2 score, from which we can extract that all variables that we considered when doing PCA are strongly represented in both of the principal components selected. 
 
 
 # References

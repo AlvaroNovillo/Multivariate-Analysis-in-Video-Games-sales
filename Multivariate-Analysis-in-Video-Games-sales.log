@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.10.12) (preloaded format=pdflatex 2023.11.7)  14 NOV 2023 16:24
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.10.12) (preloaded format=pdflatex 2023.11.7)  16 NOV 2023 16:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -693,43 +693,65 @@ LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [3 <./figs/num_games.pdf>] [4 <./figs/num_genres.pdf>] [5 <./figs/box_transform
 .pdf>]
-<figs/sales_pairs.pdf, id=49, 469.755pt x 325.215pt>
+<figs/sales_pairs.pdf, id=50, 469.755pt x 325.215pt>
 File: figs/sales_pairs.pdf Graphic file (type pdf)
 <use figs/sales_pairs.pdf>
-Package pdftex.def Info: figs/sales_pairs.pdf  used on input line 475.
+Package pdftex.def Info: figs/sales_pairs.pdf  used on input line 472.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [6] [7 <./figs/sales_pairs.pdf>]
-Overfull \hbox (0.46538pt too wide) in paragraph at lines 520--523
+<figs/scree.pdf, id=63, 469.755pt x 325.215pt>
+File: figs/scree.pdf Graphic file (type pdf)
+<use figs/scree.pdf>
+Package pdftex.def Info: figs/scree.pdf  used on input line 550.
+(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[8] [9 <./figs/scree.pdf>]
+<figs/pcaplot.pdf, id=76, 469.755pt x 325.215pt>
+File: figs/pcaplot.pdf Graphic file (type pdf)
+<use figs/pcaplot.pdf>
+Package pdftex.def Info: figs/pcaplot.pdf  used on input line 592.
+(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
+<figs/repre.pdf, id=77, 469.755pt x 325.215pt>
+File: figs/repre.pdf Graphic file (type pdf)
+<use figs/repre.pdf>
+Package pdftex.def Info: figs/repre.pdf  used on input line 633.
+(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
+[10] [11 <./figs/pcaplot.pdf>] [12 <./figs/repre.pdf>]
+Overfull \hbox (0.46538pt too wide) in paragraph at lines 658--661
  []\T1/ppl/m/n/10.95 Grané, Au-rea. n.d. ``Mul-ti-di-men-sional Datasets.'' $ht
 tps : / / aulaglobal . uc3m . es / mod / resource /
  []
 
-[8] (Multivariate-Analysis-in-Video-Games-sales.aux)
+[13] (Multivariate-Analysis-in-Video-Games-sales.aux)
  ***********
 LaTeX2e <2023-11-01>
 L3 programming layer <2023-11-01>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 13454 strings out of 474592
- 207524 string characters out of 5747215
+ 13483 strings out of 474592
+ 208215 string characters out of 5747215
  1939533 words of memory out of 5000000
- 35360 multiletter control sequences out of 15000+600000
- 608655 words of font info for 150 fonts, out of 8000000 for 9000
+ 35387 multiletter control sequences out of 15000+600000
+ 609159 words of font info for 153 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,10n,79p,407b,449s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr
-10.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
-m/cmsy10.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/public/math
-pazo/fplmri.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helv
-etic/uhvb8a.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/urw/pala
-tino/uplb8a.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/urw/pala
-tino/uplr8a.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/urw/pala
-tino/uplri8a.pfb>
-Output written on Multivariate-Analysis-in-Video-Games-sales.pdf (8 pages, 1681
-77 bytes).
+ 75i,10n,79p,496b,453s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmm
+i10.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/
+cm/cmr10.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsf
+onts/cm/cmsy10.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1/publi
+c/amsfonts/cm/cmtt10.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/type1
+/public/mathpazo/fplmri.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/ty
+pe1/urw/helvetic/uhvb8a.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/ty
+pe1/urw/palatino/uplb8a.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/ty
+pe1/urw/palatino/uplr8a.pfb><C:/Users/pc/AppData/Local/Programs/MiKTeX/fonts/ty
+pe1/urw/palatino/uplri8a.pfb>
+Output written on Multivariate-Analysis-in-Video-Games-sales.pdf (13 pages, 224
+967 bytes).
 PDF statistics:
- 96 PDF objects out of 1000 (max. 8388607)
+ 144 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 26 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 41 words of extra memory for PDF output out of 10000 (max. 10000000)
 
