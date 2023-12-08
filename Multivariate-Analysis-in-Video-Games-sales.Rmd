@@ -2,6 +2,8 @@
 output: 
   stevetemplates::article:
     fig_caption: true
+    includes:
+      in_header: "wrap-code.tex"
 bibliography: master.bib
 biblio-style: apsr
 title: "Multivariate Analysis in Video Games sales"
@@ -422,8 +424,116 @@ fviz_pca_var(pca_result, col.var = "cos2",
 
 ```
 
-Fig. 8 combines a biplot of the attributes with the computed cos2 score, from which we can extract that all variables that we considered when doing PCA are strongly represented in both of the principal components selected. 
+Fig. 8 combines a biplot of the attributes with the computed cos2 score, from which we can extract that all variables that we considered when doing PCA are strongly represented in both of the principal components selected.
 
+## Cluster analysis
+
+After the initial exploratory data analysis, and performing Principal Component Analysis, we could delve deeper in our analysis including *cluster analysis*.
+
+For cluster analysis, there are various methods you can apply to group similar instances together. Common techniques include K-means clustering, hierarchical clustering, and density-based clustering like DBSCAN. In our case, it is convenient to apply *K-means clustering* given the easy application of the algorithm, and the scaling and data pre-processing applied.
+
+K-means clustering is an unsupervised machine learning algorithm that aims to partition $n$ data points into $\mathrm{k}$ clusters. The algorithm works by minimizing the sum of squared distances between the data points and their respective cluster centroids. 
+
+The process involves the following steps:
+
+-   1. Randomly select k data points as the initial cluster centroids.
+-   2. Assign each data point $x_i$ to the nearest cluster centroid $\mu_j$ based on the Euclidean distance.
+$$
+d\left(x_i, \mu_j\right)=\sqrt{\sum_{n=1}^N\left(x_{i, n}-\mu_{j, n}\right)^2}
+$$
+where $N$ is the number of dimensions/features 1 .
+-   3. The objective of K-means is to minimize the sum of squared distances within each cluster, which can be expressed as:
+$$
+WSS=\sum_{j=1}^k \sum_{x_i \in S_j}\left\|x_i-\mu_j\right\|^2
+$$
+where $S_j$ is the set of data points in cluster $j, \mu_j$ is the centroid of cluster $j$, and $k$ is the total number of clusters 1 .
+-   4. The cluster centroids are updated by taking the mean of all data points assigned to that cluster:
+$$
+\mu_j=\frac{1}{\left|S_j\right|} \sum_{x_i \in S_j} x_i
+$$
+where $\left|S_j\right|$ is the number of data points in cluster $j$.
+
+To select the number of clusters, we will use the *elbow* method, which consists of running the algorithm with a varying k and calculating a cost function for each run. Then the cost values are plotted against k values and we choose k at the turning point (called "elbow").
+
+This algorithm can be applied in R using the *cluster* library as follows:
+```{r kmeans}
+library(cluster)
+
+# Initialize empty vector to store within-cluster sum of squares
+wss <- vector()
+
+# Vary the number of clusters from 1 to 10 and compute the total within-cluster sum of squares
+for (i in 1:10) {
+  kmeans_model <- kmeans(data, centers = i, nstart = 10)
+  wss[i] <- kmeans_model$tot.withinss
+}
+```   
+
+Fig. 9 contains the elbow plot of the model created above. Given the results, we consider that using $K = 3$ clusters will be the best option to faciliate the interpretation of the results. 
+
+```{r, echo=FALSE, fig.cap="Elbow plot for the K-means clustering algorithm "}
+# Plot the elbow method to determine the optimal number of clusters
+plot(1:10, wss, type = "b", xlab = "Number of Clusters", ylab = "Within-Cluster Sum of Squares (WSS)")
+
+```
+
+Fig. 10 visualizes the clusters found with respect with the previously found Principal Components.
+
+```{r PCAclust, echo=FALSE,fig.cap= "Visualization of the clusters with respect to the Principal Components. Points with a higher size corresponds to the cluster centers of each group "}
+library(factoextra)
+num_clusters <- 3
+
+# Apply K-means clustering
+kmeans_model <- kmeans(data, centers = num_clusters, nstart = 10)
+
+# Extract cluster assignments for each instance
+cluster_assignments <- kmeans_model$cluster
+cluster_assignments <- as.numeric(cluster_assignments)
+
+# Plot PCA with clusters
+library(factoextra)
+
+# Plot PCA with clusters and centroids
+fviz_pca_ind(pca_result,
+             geom.ind = "point", # Show points only (not "text")
+             col.ind = kmeans_model$cluster, # Color by cluster assignments
+             addEllipses = TRUE, # Concentration ellipses
+             legend.title = "Clusters",
+             habillage = as.factor(kmeans_model$cluster), # Use cluster assignments
+             geom.centroid = TRUE, # Add centroids
+             pointsize = 2 # Set size of points
+)
+
+
+
+```
+
+Based on Fig. 10,  we can derive an interpretation for the clusters found. The cluster labelled as 1, represents games with high or moderate sales volume and predominantly sold outside Japan (with some exceptions that seem to be popular in the Orient). The second cluster (2) includes games with the highest sales volume in Japan, with some exceptions regarding games with the highest sales volume in the West. Finally, the third (3) cluster contains the games with the lowest sales in our data set, both in Japan and in the West.
+
+By inspecting the genre distribution in each cluster, Fig. 11, and based on the aforementioned classification, we can have a visual representation of which is the most sold genre.
+
+```{r genreclust, echo=FALSE, fig.cap="Genre distribution in each cluster."}
+# Plotting the category distribution based on 'Legend_Factors' (Genre)
+# Combine cluster assignments with legend_factors
+combined_data <- data.frame(Cluster = cluster_assignments, Legend_Factors = filtered_df$Genre)
+# Calculate the counts of each genre
+genre_counts <- table(combined_data$Legend_Factors)
+genre_counts_df <- data.frame(Genre = names(genre_counts), Count = as.numeric(genre_counts))
+
+# Reorder factor levels based on count of games
+combined_data$Legend_Factors <- factor(combined_data$Legend_Factors, levels = names(sort(table(combined_data$Legend_Factors), decreasing = TRUE)))
+
+# Plot the reordered category distribution based on counts
+ggplot(data = combined_data, aes(x = Legend_Factors, fill = as.factor(Cluster))) +
+  geom_bar() +
+  labs(x = "Genre",
+       y = "Number of Games",
+       title = "Category Distribution by Clusters") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+As previously mentioned, shooter games have the highest sales, given their predominance within the second (2) cluster. Furthermore, this finding is in line with what we saw in Figure 7, where we saw that shooter games are the ones that amount to the highest sales, with some cases being predominantly sold in Japan. It is interesting to see how heterogeneous the three defined clusters are, although the sales trends are clearly visible in the results.
 
 # References
 
