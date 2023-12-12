@@ -426,6 +426,105 @@ fviz_pca_var(pca_result, col.var = "cos2",
 
 Fig. 8 combines a biplot of the attributes with the computed cos2 score, from which we can extract that all variables that we considered when doing PCA are strongly represented in both of the principal components selected.
 
+## Multidimensional scaling (MDS)
+
+Multidimensional Scaling (MDS) is a dimensionality reduction technique that visualizes the pairwise dissimilarity or similarity between data points. It is particularly useful for datasets containing both qualitative and quantitative data, as MDS can handle various types of input distances, including those based on categorical variables. 
+
+Unlike Principal Component Analysis (PCA), which works well with quantitative variables, MDS is versatile and applicable to mixed datasets. MDS results provide a low-dimensional representation that preserves the original dissimilarity or similarity structure, making it valuable for revealing patterns, clustering, and interpreting relationships in diverse datasets with a mix of variable types.
+
+```{r, echo=FALSE, warning=FALSE}
+filtered_df$Platform <- as.factor(filtered_df$Platform)
+filtered_df$Year <- as.factor(filtered_df$Year)
+filtered_df$Publisher <- as.factor(filtered_df$Publisher)
+filtered_df$Genre <- as.factor(filtered_df$Genre)
+
+distance <- dist(filtered_df[, 3:11], method = "euclidean",)
+mds_eu <- cmdscale(distance)
+```
+
+The ${\tt dist}$ function in R, by default, uses Euclidean distance for numerical variables. However, when categorical variables are present, dist converts them into binary indicators (dummy variables) and calculates the dissimilarity based on these indicators. The Jaccard distance, which measures the dissimilarity between two sets, is commonly used for binary data.
+
+
+```{r, echo=FALSE}
+mds_data <- data.frame(Genre = filtered_df$Genre, mds_eu)
+
+# Create biplot
+ggplot(mds_data, aes(x = `X1`, y = `X2`, color = Genre)) +
+  geom_point(size = 3) +
+  geom_text(aes(label = Genre), hjust = 0.5, vjust = -0.5, size = 3, color = "black", alpha = 0.2) +
+  labs(title = "MDS Scatterplot", x = "Dimension 1", y = "Dimension 2") +
+  theme_minimal()
+```
+
+
+```{r, echo=FALSE}
+# Calculate eigenvalues
+eigenvalues <- cmdscale(distance, eig=TRUE)$eig
+
+# Calculate the proportion of variability explained by each dimension
+var_explained <- eigenvalues[1:2] / sum(eigenvalues)
+```
+
+Nevertheless, Euclidean distance is not inherently suitable for categorical variables. The Euclidean distance metric assumes a continuous numerical scale and relies on the notion of geometric distances in a continuous space. Categorical variables, on the other hand, represent distinct categories without a natural ordering or continuous progression.
+
+Alternatively, Gower's distance is designed to handle mixed data types and offers more flexibility in handling both numerical and categorical variables. The ${\tt daisy}$ function in the ${\tt cluster}$ package is often used for this purpose.
+
+We choose to use Gower's distance over Euclidean distance in the context of mixed data because Gower distance is specifically designed to handle datasets that include a combination of numerical, categorical, and ordinal variables. When working with diverse types of variables, such as continuous measurements, categorical labels, or ordinal rankings, traditional distance measures like Euclidean may not be appropriate due to their assumptions about data types.
+
+```{r, echo=FALSE, warning=FALSE}
+library(cluster)
+gow_distance <- daisy(filtered_df[, 3:11])
+
+mds_eu_gow <- cmdscale(gow_distance, k=5)
+
+mds_data <- data.frame(Genre = filtered_df$Genre, mds_eu_gow)
+
+# Create biplot
+ggplot(mds_data, aes(x = `X1`, y = `X2`, color = Genre)) +
+  geom_point(size = 3) +
+  labs(title = "MDS Scatterplot", x = "Dimension 1", y = "Dimension 2") +
+  theme_minimal()
+```
+Gower distance provides balanced treatment for categorical variables, ensuring dissimilarity is computed based on shared categories. These attributes make Gower distance a robust and flexible option for dissimilarity measurement, particularly in real-world scenarios with heterogeneous data types.
+
+The Gower distance \(d_G(x, y)\) between two data points \(x\) and \(y\) is computed as:
+
+\[
+d_G(x, y) = \frac{\sum_{i=1}^{n} w_i \cdot s_i(x, y)}{\sum_{i=1}^{n} w_i}
+\]
+
+where \(s_i(x, y)\) represents the dissimilarity measure for each variable, \(w_i\) denotes the weight assigned to each variable, and \(n\) is the total number of variables. This formula accommodates different variable types and scales, providing a comprehensive dissimilarity metric for mixed datasets.
+
+
+```{r, echo=FALSE}
+# Calculate eigenvalues
+eigenvalues <- cmdscale(gow_distance, eig=TRUE)$eig
+
+# Calculate the proportion of variability explained by each dimension
+var_explained_g <- eigenvalues[1:2] / sum(eigenvalues)
+```
+The variability explained by using Gower's distance is `r sum(var_explained_g)` while originally using the default distance we got a result of `r sum(var_explained)`.  Although the explained variability is lower using Gower's distance, we know it's appropiate to use it either way due to the nature of our data, which is mixed.
+
+In the heatmap displayed below, we aim to elucidate the intricate relationship between the original quantitative variables and the MDS dimensions. The color intensity in the heatmap reflects the correlation or loadings, offering insights into how each variable contributes to the different dimensions.
+
+```{r, echo= FALSE}
+# Calculate loadings
+loadings <- cor(filtered_df[,7:9], mds_eu_gow[,1:2])
+library(reshape2)
+# Convert loadings to long format for ggplot
+loadings_long <- melt(loadings, varnames = c("Original_Variable", "MDS_Dimension"))
+
+# Plot heatmap
+ggplot(loadings_long, aes(x = MDS_Dimension, y = Original_Variable, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1, 1), space = "Lab") +
+  labs(title = "Relationship between Original quantitative Variables and MDS Dimensions",
+       x = "MDS Dimension", y = "Original Variable") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+As we know, in the calculation of Grower's distance there is more weight on the categorical values rather than the quantitative, which is one of its main drawbacks. Nevertheless, we can see the first dimension being more related to how well the game sold in western cultures, while the second dimension has more correlation with Japan sales.
+
 ## Cluster analysis
 
 After the initial exploratory data analysis, and performing Principal Component Analysis, we could delve deeper in our analysis including *cluster analysis*.
@@ -457,7 +556,6 @@ To select the number of clusters, we will use the *elbow* method, which consists
 
 This algorithm can be applied in R using the *cluster* library as follows:
 ```{r kmeans}
-library(cluster)
 
 # Initialize empty vector to store within-cluster sum of squares
 wss <- vector()
@@ -489,9 +587,6 @@ kmeans_model <- kmeans(data, centers = num_clusters, nstart = 10)
 # Extract cluster assignments for each instance
 cluster_assignments <- kmeans_model$cluster
 cluster_assignments <- as.numeric(cluster_assignments)
-
-# Plot PCA with clusters
-library(factoextra)
 
 # Plot PCA with clusters and centroids
 fviz_pca_ind(pca_result,
