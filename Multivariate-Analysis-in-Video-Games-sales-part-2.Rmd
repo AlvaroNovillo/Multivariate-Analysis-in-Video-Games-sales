@@ -334,8 +334,6 @@ fviz_pca_ind(pca_result,
              pointsize = 2 # Set size of points
 )
 
-
-
 ```
 
 Based on Figure 7 and Table 2, we can derive an interpretation for the clusters found. The cluster labelled (1) contains those games with moderate sales volumes that are mainly sold outside Japan. The second cluster (2) contains games that are mainly sold in Japan. The third cluster (3) contains the games with the lowest sales volume worldwide, and finally cluster (4) represents the games with the highest sales volume worldwide.
@@ -411,11 +409,9 @@ plot(1:max_clusters, wcss, type = "b",
 
 Using MDS Dimensions to perform kmeans reveals that $k = 4$ cluster division is by far the most appropriate in our case, Fig. 9.
 
-Finally, we can visualize the clusters with respect to the first two dimensions found performing MDS using Gower's distance
+Finally, we can visualize the clusters with respect to the first two dimensions found performing MDS using Gower's distance.
 
 ```{r, echo=FALSE, fig.cap = "MDS Scatterplot with K-means Clusters"}
-
-
 
 # Set the number of clusters
 num_clusters <- 4
@@ -439,10 +435,11 @@ ggplot(mds_data, aes(x = `X1`, y = `X2`, shape = legend_factors, color = factor(
                      labels = c("Others", "Action", "Role-Playing", "Shooter")) +
   theme_minimal()
 
-
 ```
 
-AÑADIR INTERPRETACIÓN
+The disparity in the scatter plots of individuals between k-means clustering with PCA and MDS stems from the fundamental differences in their approaches. PCA, focused on maximizing variance, performs dimensionality reduction exclusively with continuous variables, capturing the primary sources of variation in the data. In contrast, MDS concentrates on preserving pairwise dissimilarities or distances across all variable types in a lower-dimensional space.
+Consequently, the PCA-k-means scatter plot emphasizes the dominant variability along principal components, while the MDS-k-means plot reflects relationships and dissimilarities based on the original pairwise distances. The dissimilarity in the plots underscores the nuanced perspectives these techniques offer, underscoring the importance of method choice aligned with the data characteristics and analytical objectives. Since the dimensions obtained through MDS were calculated using Gower's distance, the categorical variables were present and also given more importance, which reflects on the difference in the plots.
+Previously, we visualized how the first MDS dimension was more correlated to westen sales while the second dimension had a more significant correlation with Japan sales. This is visible in the plot, since in clusters three and four we can see a lot of individuals that belong to the role playing genre higher up in the vertical axis, while in cluster one we see a few action genre games with low values on the second dimension. These reduced-dimensional representations facilitate the identification of meaningful groups or clusters within the data.
 
 # References
 
