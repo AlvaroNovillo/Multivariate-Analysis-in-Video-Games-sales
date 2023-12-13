@@ -1,0 +1,455 @@
+---
+output: 
+  stevetemplates::article:
+    extra_dependencies: ["float"]
+    fig_caption: true
+    includes:
+      in_header: "wrap-code.tex"
+bibliography: master.bib
+biblio-style: apsr
+title: "Multivariate Analysis in Video Games sales"
+thanks: "Replication files are available on the author's Github account (https://github.com/AlvaroNovillo). **Current version**: `r format(Sys.time(), '%B %d, %Y')`; **Corresponding author**: alvanovi@ucm.es."
+author:
+- name: Álvaro Novillo
+  affiliation: Universidad Carlos III
+- name: Paolo Salvatore Lodato Olano
+  affiliation: Universidad Carlos III
+abstract: "In this article, we perform several dimensionality reduction techniques and clustering algorithms on a video game sales dataset available on Kaggle (https://www.kaggle.com/datasets/gregorut/videogamesales/data). Specifically, we use Principal Component Analysis (PCA) and Multidimensional Scaling (MDS) to reduce the dimensionality of the dataset. We also perform kmeans clustering technique to our dataset to identify sales patterns in different videogame genres. The article discusses the advantages and limitations of each technique and provides insights into the video game market based on the analysis."
+keywords: "PCA,MDS,kmeans,Cluster, Videogames, Sales"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+geometry: margin=1in
+fontfamily: mathpazo
+fontsize: 11pt
+# spacing: double
+endnote: no
+---
+
+```{r setup, include=FALSE}
+library(kableExtra)
+library(ggplot2)
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
+options(kableExtra.latex.load_packages = TRUE)
+knitr::opts_chunk$set(cache=TRUE,
+                      message=FALSE, warning=FALSE,
+                      fig.path='figs/',
+                      cache.path = '_cache/',
+                      fig.process = function(x) {
+                      x2 = sub('-\\d+([.][a-z]+)$', '\\1', x)
+                      if (file.rename(x, x2)) x2 else x
+                      })
+```
+## About the dataset
+
+The dataset under consideration contains information on video games with sales greater than 100,000 copies between 1980 and 2016. The dataset includes 11,493 unique game sales, detailing the name, year of release, genre, platform, and sales figures across numerous regions.
+
+The dataset contains the following fields:
+
+-   **Rank** - Ranked by overall sales
+-   **Name** - Name of each videogame
+-   **Platform** - The games platform
+-   **Year** - Year of Release
+-   **Genre** - Genre of Game
+-   **Publisher** - Publisher of Game
+-   **NA_Sales** - Sales in NA (per Million)
+-   **EU_Sales** - Sales in EU (per Million)
+-   **JP_Sales** - Sales in JP (per Million)
+-   **Other_Sales** - Sales in ROW[^1] (per Million)
+-   **Global_Sales** - Total worldwide sales (per Million)
+
+[^1]: Net Sales (ROW) means the gross amount billed or invoiced on sales by Company and its Affiliates and Sublicensees of Licensed Products, less the following: (a) customary trade, quantity, or cash discounts and commissions to non-affiliated brokers or agents to the extent actually allowed and taken; (b) amounts repaid or credited by reason of rejection or return; (c) to the extent separately stated on purchase orders, invoices, or other documents of sale, any taxes or other governmental charges levied on the production, sale, transportation, delivery, or use of a Licensed Product which is paid by or on behalf of Company; (d) outbound transportation costs prepaid or allowed and costs of insurance in transit; and (e) allowance for bad debt that is customary and reasonable for the industry and in accordance with generally accepted accounting principles. [@lawinsider]
+
+## Data Preprocessing
+
+The dataset contains 11 variables, including quantitative variables like sales figures across various regions (NA_Sales, EU_Sales, JP_Sales, Other_Sales, and Global_Sales), the release year, and the rank of the game based on overall sales. Additionally, it includes multi-state categorical variables like the genre, platform, and publisher of the game. To conform with the desired format, which requires at least two binary variables, we will filter out the video games of recent years and focus on titles that we are already acquainted with. Moreover, we will limit our research to two primary platforms, namely, Xbox One and PS4.
+
+```{r preprocessing, echo=FALSE}
+df = read.csv("vgsales.csv")
+
+# Filter for games in 2015 and 2016, and on the PS4 or PC platform
+filtered_df <- df[df$Year %in% c(2015, 2016) & df$Platform %in% c("PS4", "XOne"), ]
+head(filtered_df) %>%
+  kbl(booktabs = T, caption = "Top five videogames, according to the sales ranking, that we are going to work with") %>%
+  kable_styling(latex_options = c("striped", "scale_down","hold_position"), position = "center")
+
+```
+
+```{r box_transform, echo=FALSE, fig.cap= "Boxplots of the different transformations applyied to the sales data. From left to right, the original data, the log-transformed data and the log transformed and scaled data"}
+par(mfrow = c(1, 3))
+data <- filtered_df[sapply(df,is.numeric)][,2:4]
+
+# Create boxplots
+boxplot(data, main = "Original Data")
+boxplot(log(data + 0.001) , main = "Log Transformed Data")
+boxplot(scale(log(data + 0.001)), main = "Log & Scaled Data")
+
+data <- as.data.frame(scale(log(data + 0.001)))
+
+```
+
+We recall from the previous part of the analysis that the Rank variable is right-skewed. For positive skewness, we can apply a logarithmic transformation^[Since the variables related to sales in our dataset have zeros, we have used the Box-Cox technique (see @box) to identify the appropriate transformation for our case (obtaining $\lambda \approx 0$), which leads to the application of the $log(x + \epsilon)$ transformation, where $\epsilon > 0$ is an arbitrary small constant]. Many statistical methods, including linear regression and analysis of variance, assume that the residuals are normally distributed. Normalising our data would also be useful to achieve zero mean and unit variance. In Figure 1 we can visualise these transformations performed on the sales variables.
+
+## PCA
+
+After an initial exploration and necessary pre-processing of the dataset, we applied Principal Component Analysis to our sales data, reducing the dimensionality of the problem to two dimensions. The results are shown in Fig 2, where we can see that the games on the left of the plot are those with the highest sales volumes, while those on the top are mainly games that are predominantly sold in Japan. Shooter games (shown as blue crosses) are the best-selling games worldwide, with some examples proving particularly profitable on the Japanese market, as indicated by the points in the upper left quadrant. As highlighted in the previous part of the analysis, certain action games (represented by yellow triangles) and role-playing games (represented by pink squares) have a predominant presence in the Japanese market, with some being marketed exclusively in this region (notably in the top right quadrant of the graph).
+
+```{r pcaplot, echo=FALSE, fig.cap = "Principal Component Analysis (PCA) plot displaying the top selling game genres' distribution with respect to the two principal components. Points in yellow corresponds to Action games, those in pink to Role-Playing games, those in blue to Shooters, and the rest of the genres are visualized in grey."}
+data <- scale(log(filtered_df[sapply(filtered_df,is.numeric)][2:6] + 0.001))
+
+# Perform PCA
+pca_result <- prcomp(data, scale = TRUE)
+
+# Create a custom color palette
+selected_colors <- c("Action" = "#FFCC33", "Role-Playing" = "#FF33FF", "Shooter" = "#3366FF")
+other_color <- "grey"  # Color for the rest of the points
+
+# Assign colors based on genres
+colors <- ifelse(filtered_df$Genre %in% names(selected_colors),
+                 selected_colors[as.character(filtered_df$Genre)],
+                 other_color)
+
+# Create a custom legend labels
+legend_labels <- c("Others","Action", "Role-Playing", "Shooter")
+
+# Create factors for the legend alignment
+legend_factors <- factor(ifelse(filtered_df$Genre %in% names(selected_colors),
+                               as.character(filtered_df$Genre),
+                               "Others"),
+                         levels = c("Others","Action", "Role-Playing", "Shooter" ))
+
+# Visualize PCA with customized colors
+fviz_pca_ind(pca_result,
+             geom.ind = "point", # Show points only (not "text")
+             col.ind = colors,   # Use customized colors
+             addEllipses = TRUE, # Concentration ellipses
+             palette = c(other_color, unique(selected_colors)),
+             legend.title = "Genres",
+             addLegend = TRUE,
+             legend.labels = legend_labels,
+             legend.key = list(space = "top", columns = 2), # Adjust legend appearance
+             habillage = legend_factors # Use legend factors for alignment
+)
+```
+
+## Multidimensional scaling (MDS)
+
+Multidimensional Scaling (MDS) is another dimensionality reduction technique that visualizes the pairwise dissimilarity or similarity between data points. It is particularly useful for datasets containing both qualitative and quantitative data, as MDS can handle various types of input distances, including those based on categorical variables. 
+
+Unlike Principal Component Analysis (PCA), which works well with quantitative variables, MDS is versatile and applicable to mixed datasets. MDS results provide a low-dimensional representation that preserves the original dissimilarity or similarity structure, making it valuable for revealing patterns, clustering, and interpreting relationships in diverse datasets with a mix of variable types.
+
+```{r, echo=FALSE, warning=FALSE}
+filtered_df$Platform <- as.factor(filtered_df$Platform)
+filtered_df$Year <- as.factor(filtered_df$Year)
+filtered_df$Publisher <- as.factor(filtered_df$Publisher)
+filtered_df$Genre <- as.factor(filtered_df$Genre)
+
+distance <- dist(filtered_df[, 3:11], method = "euclidean",)
+mds_eu <- cmdscale(distance)
+```
+
+The ${\tt dist}$ function in R, by default, uses Euclidean distance for numerical variables. However, when categorical variables are present, dist converts them into binary indicators (dummy variables) and calculates the dissimilarity based on these indicators. The Jaccard distance, which measures the dissimilarity between two sets, is commonly used for binary data.
+
+
+```{r, echo=FALSE, fig.cap="Biplot showing MDS performed using the Euclidean distance"}
+mds_data <- data.frame(Genre = filtered_df$Genre, mds_eu)
+
+mds_data$legend_factors <- factor(ifelse(mds_data$Genre %in% names(selected_colors),
+                                         as.character(mds_data$Genre),
+                                         "Others"),
+                                   levels = c("Others","Action", "Role-Playing", "Shooter"))
+selected_colors <- c("Action" = "#FFCC33", "Role-Playing" = "#FF33FF", "Shooter" = "#3366FF")
+other_color <- "grey"  # Color for the rest of the points
+
+
+# Create biplot
+# Create biplot with customized colors and legend labels
+ggplot(mds_data, aes(x = `X1`, y = `X2`, color = legend_factors)) +
+  geom_point(size = 3) +
+  geom_text(aes(label = Genre), hjust = 0.5, vjust = -0.5, size = 3, color = "black", alpha = 0.2) +
+  labs(title = "MDS Scatterplot", x = "Dimension 1", y = "Dimension 2", color = "Genres") +
+  scale_color_manual(values = c(other_color, unique(selected_colors)), 
+                     breaks = levels(mds_data$legend_factors),
+                     labels = c("Others", "Action", "Role-Playing", "Shooter")) +
+  theme_minimal()
+```
+
+
+```{r, echo=FALSE}
+# Calculate eigenvalues
+eigenvalues <- cmdscale(distance, eig=TRUE)$eig
+
+# Calculate the proportion of variability explained by each dimension
+var_explained <- eigenvalues[1:2] / sum(eigenvalues)
+```
+
+Nevertheless, Euclidean distance is not inherently suitable for categorical variables. The Euclidean distance metric assumes a continuous numerical scale and relies on the notion of geometric distances in a continuous space. Categorical variables, on the other hand, represent distinct categories without a natural ordering or continuous progression.
+
+Alternatively, Gower's distance is designed to handle mixed data types and offers more flexibility in handling both numerical and categorical variables. The ${\tt daisy}$ function in the ${\tt cluster}$ package is often used for this purpose.
+
+We choose to use Gower's distance over Euclidean distance in the context of mixed data because Gower distance is specifically designed to handle datasets that include a combination of numerical, categorical, and ordinal variables. When working with diverse types of variables, such as continuous measurements, categorical labels, or ordinal rankings, traditional distance measures like Euclidean may not be appropriate due to their assumptions about data types.
+
+```{r, echo=FALSE, warning=FALSE, fig.cap="Biplot showing MDS performed using the Gower's distance"}
+library(cluster)
+gow_distance <- daisy(filtered_df[, 3:11])
+
+mds_eu_gow <- cmdscale(gow_distance, k=5)
+
+mds_data <- data.frame(Genre = filtered_df$Genre, mds_eu_gow)
+mds_data$legend_factors <- factor(ifelse(mds_data$Genre %in% names(selected_colors),
+                                         as.character(mds_data$Genre),
+                                         "Others"),
+                                   levels = c("Others","Action", "Role-Playing", "Shooter"))
+selected_colors <- c("Action" = "#FFCC33", "Role-Playing" = "#FF33FF", "Shooter" = "#3366FF")
+other_color <- "grey"  # Color for the rest of the points
+
+# Create biplot
+ggplot(mds_data, aes(x = `X1`, y = `X2`, color = legend_factors)) +
+  geom_point(size = 3) +
+  labs(title = "MDS Scatterplot", x = "Dimension 1", y = "Dimension 2", color = "Genres") +
+  scale_color_manual(values = c(other_color, unique(selected_colors)), 
+                     breaks = levels(mds_data$legend_factors),
+                     labels = c("Others", "Action", "Role-Playing", "Shooter")) +
+  theme_minimal()
+```
+
+Gower distance provides balanced treatment for categorical variables, ensuring dissimilarity is computed based on shared categories. These attributes make Gower distance a robust and flexible option for dissimilarity measurement, particularly in real-world scenarios with heterogeneous data types.
+
+The Gower distance \(d_G(x, y)\) between two data points \(x\) and \(y\) is computed as:
+
+\[
+d_G(x, y) = \frac{\sum_{i=1}^{n} w_i \cdot s_i(x, y)}{\sum_{i=1}^{n} w_i}
+\]
+
+where \(s_i(x, y)\) represents the dissimilarity measure for each variable, \(w_i\) denotes the weight assigned to each variable, and \(n\) is the total number of variables. This formula accommodates different variable types and scales, providing a comprehensive dissimilarity metric for mixed datasets.
+
+
+```{r, echo=FALSE}
+# Calculate eigenvalues
+eigenvalues <- cmdscale(gow_distance, eig=TRUE)$eig
+
+# Calculate the proportion of variability explained by each dimension
+var_explained_g <- eigenvalues[1:2] / sum(eigenvalues)
+```
+
+The variability explained by using Gower's distance is `r sum(var_explained_g)` while originally using the default distance we got a result of `r sum(var_explained)`.  Although the explained variability is lower using Gower's distance, we know it's appropriate to use it either way due to the nature of our data, which is mixed.
+
+In the heatmap displayed below, we aim to elucidate the intricate relationship between the original quantitative variables and the MDS dimensions. The color intensity in the heatmap reflects the correlation or loadings, offering insights into how each variable contributes to the different dimensions.
+
+```{r, echo= FALSE, fig.cap= "Correlation matrix between the quantitative variables and the MDS dimensions"}
+# Calculate loadings
+loadings <- cor(filtered_df[,7:9], mds_eu_gow[,1:2])
+library(reshape2)
+# Convert loadings to long format for ggplot
+loadings_long <- melt(loadings, varnames = c("Original_Variable", "MDS_Dimension"))
+
+# Plot heatmap
+ggplot(loadings_long, aes(x = MDS_Dimension, y = Original_Variable, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1, 1), space = "Lab") +
+  labs(title = "Relationship between Original quantitative Variables and MDS Dimensions",
+       x = "MDS Dimension", y = "Original Variable") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+As we know, in the calculation of Grower's distance there is more weight on the categorical values rather than the quantitative, which is one of its main drawbacks. Nevertheless, we can see the first dimension being more related to how well the game sold in western cultures, while the second dimension has more correlation with Japan sales.
+
+## Cluster analysis
+
+After the initial exploratory data analysis, performing Principal Component Analysis and MDS, we could delve deeper in our analysis including *cluster analysis*.
+
+For cluster analysis, there are various methods you can apply to group similar instances together. Common techniques include K-means clustering, hierarchical clustering, and density-based clustering like DBSCAN. In our case, it is convenient to apply *K-means clustering* given the easy application of the algorithm, and the scaling and data pre-processing applied.
+
+K-means clustering is an unsupervised machine learning algorithm that aims to partition $n$ data points into $\mathrm{k}$ clusters. The algorithm works by minimizing the sum of squared distances between the data points and their respective cluster centroids. 
+
+The process involves the following steps:
+
+-   1. Randomly select k data points as the initial cluster centroids.
+-   2. Assign each data point $x_i$ to the nearest cluster centroid $\mu_j$ based on the Euclidean distance.
+$$
+d\left(x_i, \mu_j\right)=\sqrt{\sum_{n=1}^N\left(x_{i, n}-\mu_{j, n}\right)^2}
+$$
+where $N$ is the number of dimensions/features 1 .
+-   3. The objective of K-means is to minimize the sum of squared distances within each cluster, which can be expressed as:
+$$
+WSS=\sum_{j=1}^k \sum_{x_i \in S_j}\left\|x_i-\mu_j\right\|^2
+$$
+where $S_j$ is the set of data points in cluster $j, \mu_j$ is the centroid of cluster $j$, and $k$ is the total number of clusters 1 .
+-   4. The cluster centroids are updated by taking the mean of all data points assigned to that cluster:
+$$
+\mu_j=\frac{1}{\left|S_j\right|} \sum_{x_i \in S_j} x_i
+$$
+where $\left|S_j\right|$ is the number of data points in cluster $j$.
+
+To select the number of clusters, we will use the *elbow* method, which consists of running the algorithm with a varying k and calculating a cost function for each run. Then the cost values are plotted against k values and we choose k at the turning point (called "elbow").
+
+This algorithm can be applied in R using the *cluster* library as follows:
+```{r kmeans}
+library(cluster)
+#Prepare PC to perform kmeans
+pca_comp = as.data.frame(pca_result$x[,1:2])
+# Initialize empty vector to store within-cluster sum of squares
+wss <- vector()
+
+# Vary the number of clusters from 1 to 10 and compute the total within-cluster sum of squares
+for (i in 1:10) {
+  kmeans_model <- kmeans(pca_comp, centers = i, nstart = 10)
+  wss[i] <- kmeans_model$tot.withinss
+}
+```   
+Note that we have applied the kmeans algorithm to the previously found principal components. This ensures that the implementation of the Euclidean distance is appropriate as the input variables are uncorrelated (orthogonal) numerical values.
+
+Figure 6 shows the elbow plot of the model created above. Given the results, we believe that using $K = 4$ clusters is the best option to facilitate the interpretation of the results. We will see later that this is both the most convenient choice and the most appropriate when performing kmeans using MDS Dimensions. 
+
+```{r, echo=FALSE, fig.cap="Elbow plot for the K-means clustering algorithm using principal components "}
+# Plot the elbow method to determine the optimal number of clusters
+plot(1:10, wss, type = "b", xlab = "Number of Clusters", ylab = "Within-Cluster Sum of Squares (WSS)")
+
+```
+
+Fig. 7 visualizes the clusters found with respect with the previously found Principal Components.
+
+```{r PCAclust, echo=FALSE,fig.cap= "Visualization of the clusters with respect to the Principal Components. Points with a higher size corresponds to the cluster centers of each group "}
+library(factoextra)
+num_clusters <- 4
+
+# Apply K-means clustering
+set.seed("123")
+kmeans_model <- kmeans(pca_comp, centers = num_clusters, nstart = 10)
+
+# Extract cluster assignments for each instance
+cluster_assignments <- kmeans_model$cluster
+cluster_assignments <- as.numeric(cluster_assignments)
+
+# Plot PCA with clusters
+library(factoextra)
+
+# Plot PCA with clusters and centroids
+fviz_pca_ind(pca_result,
+             geom.ind = "point", # Show points only (not "text")
+             col.ind = kmeans_model$cluster, # Color by cluster assignments
+             addEllipses = TRUE, # Concentration ellipses
+             legend.title = "Clusters",
+             habillage = as.factor(kmeans_model$cluster), # Use cluster assignments
+             geom.centroid = TRUE, # Add centroids
+             pointsize = 2 # Set size of points
+)
+
+
+
+```
+
+Based on Figure 7 and Table 2, we can derive an interpretation for the clusters found. The cluster labelled (1) contains those games with moderate sales volumes that are mainly sold outside Japan. The second cluster (2) contains games that are mainly sold in Japan. The third cluster (3) contains the games with the lowest sales volume worldwide, and finally cluster (4) represents the games with the highest sales volume worldwide.
+
+
+```{r, echo=FALSE}
+# Add cluster assignments to your original dataset
+data_with_clusters <- cbind(data, cluster = cluster_assignments)
+
+library(dplyr)
+
+# Assuming 'data_with_clusters' contains your dataset with cluster assignments
+
+# Calculate the mean of each variable within each cluster
+cluster_means <- as.data.frame(data_with_clusters) %>%
+  group_by(cluster) %>%
+  summarise_all("mean")
+
+round(cluster_means,3)  %>%
+  kbl(booktabs = T, caption = "Descriptive statistics at the cluster level") %>%
+  kable_styling(latex_options = c("striped","hold_position"), position = "center")
+
+```
+
+By inspecting the genre distribution in each cluster, Fig. 8, and based on the aforementioned classification, we can have a visual representation of which is the most sold genre.
+
+```{r genreclust, echo=FALSE, fig.cap="Genre distribution in each cluster."}
+# Plotting the category distribution based on 'Legend_Factors' (Genre)
+# Combine cluster assignments with legend_factors
+combined_data <- data.frame(Cluster = cluster_assignments, Legend_Factors = filtered_df$Genre)
+# Calculate the counts of each genre
+genre_counts <- table(combined_data$Legend_Factors)
+genre_counts_df <- data.frame(Genre = names(genre_counts), Count = as.numeric(genre_counts))
+
+# Reorder factor levels based on count of games
+combined_data$Legend_Factors <- factor(combined_data$Legend_Factors, levels = names(sort(table(combined_data$Legend_Factors), decreasing = TRUE)))
+
+# Plot the reordered category distribution based on counts
+ggplot(data = combined_data, aes(x = Legend_Factors, fill = as.factor(Cluster))) +
+  geom_bar() +
+  labs(x = "Genre",
+       y = "Number of Games",
+       title = "Category Distribution by Clusters") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+As mentioned earlier, shooter and action games have the highest sales, given their predominance in cluster (4). We can also see how some of the action and RPG games in our dataset are mainly sold in Japan, given their presence in cluster (2).
+
+As we did with the principal components, we can also apply kmeans clustering algorithm using the obtained dimensions after applying MDS to the dataset. 
+
+```{r, echo=FALSE, fig.cap="Elbow Plot for K-means Clustering using MDS Dimensions"}
+# Initialize a vector to store within-cluster sum of squares
+wcss <- vector()
+
+# Vary the number of clusters from 1 to a defined maximum
+max_clusters <- 10  # Define the maximum number of clusters to test
+
+# Extract first two dimensions from MDS result
+mds_first_two_dimensions <- mds_eu_gow[, 1:2]
+
+for (i in 1:max_clusters) {
+  kmeans_model <- kmeans(mds_first_two_dimensions, centers = i, nstart = 10)
+  wcss[i] <- kmeans_model$tot.withinss
+}
+
+# Create an elbow plot
+plot(1:max_clusters, wcss, type = "b",
+     xlab = "Number of Clusters",
+     ylab = "Within-Cluster Sum of Squares (WCSS)")
+
+```
+
+Using MDS Dimensions to perform kmeans reveals that $k = 4$ cluster division is by far the most appropriate in our case, Fig. 9.
+
+Finally, we can visualize the clusters with respect to the first two dimensions found performing MDS using Gower's distance
+
+```{r, echo=FALSE, fig.cap = "MDS Scatterplot with K-means Clusters"}
+
+
+
+# Set the number of clusters
+num_clusters <- 4
+
+# Apply K-means clustering
+set.seed(123)
+kmeans_model <- kmeans(mds_first_two_dimensions, centers = num_clusters, nstart = 10)
+
+# Extract cluster assignments for each instance
+cluster_assignments <- kmeans_model$cluster
+cluster_assignments <- as.numeric(cluster_assignments)
+
+# Plot MDS with clusters and centroids
+# Create biplot with k-means clusters
+# Create biplot with k-means clusters
+ggplot(mds_data, aes(x = `X1`, y = `X2`, shape = legend_factors, color = factor(kmeans_model$cluster))) +
+  geom_point(size = 3) +
+  labs(x = "Dimension 1", y = "Dimension 2", shape = "Genres", color = "Clusters") +
+  scale_shape_manual(values = c(16, 17, 18, 19),  # Set shape values for different genres
+                     breaks = c("Others", "Action", "Role-Playing", "Shooter"),
+                     labels = c("Others", "Action", "Role-Playing", "Shooter")) +
+  theme_minimal()
+
+
+```
+
+AÑADIR INTERPRETACIÓN
+
+# References
+
+```{=tex}
+\setlength{\parindent}{-0.2in}
+\setlength{\leftskip}{0.2in}
+\setlength{\parskip}{8pt}
+\vspace*{-0.2in}
+```
+\noindent
